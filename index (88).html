@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Clínica</title>
+<style>
+  :root{
+    --branco:#fff; --nevoa:#f7f7f6; --linha:#e9e9e6; --linha2:#d8d8d4;
+    --cinza:#8b8b85; --grafite:#4a4a46; --preto:#0c0c0b;
+    --r:12px; --r2:18px;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.32,.72,0,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--branco);color:var(--preto);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.015em;line-height:1.1}
+  h1{font-size:34px}
+  h2{font-size:22px}
+  input,select,textarea,button{font:inherit;color:inherit}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--preto);color:var(--branco)}
+  :focus-visible{outline:2px solid var(--preto);outline-offset:2px;border-radius:4px}
+
+  /* navegação */
+  .lateral{position:fixed;inset:0 auto 0 0;width:236px;border-right:1px solid var(--linha);padding:32px 20px;display:none;flex-direction:column}
+  .marca{font-family:var(--serif);font-size:24px;padding:0 12px}
+  .etiqueta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cinza)}
+  .lateral .etiqueta{padding:0 12px;margin-top:6px}
+  .menu{margin-top:38px;display:flex;flex-direction:column;gap:2px}
+  .menu a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r);color:var(--cinza);font-size:14px;transition:background .2s var(--ease),color .2s var(--ease)}
+  .menu a:hover{background:var(--nevoa);color:var(--preto)}
+  .menu a.ativo{background:var(--nevoa);color:var(--preto);font-weight:600}
+  .nota{margin-top:auto;padding:0 12px;font-size:12px;color:var(--cinza)}
+
+  .rodape{position:fixed;inset:auto 0 0 0;z-index:20;display:flex;border-top:1px solid var(--linha);background:rgba(255,255,255,.92);backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}
+  .rodape a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 13px;font-size:11px;color:var(--cinza);transition:color .2s var(--ease)}
+  .rodape a.ativo{color:var(--preto);font-weight:600}
+
+  main{padding:28px 20px 96px}
+  .area{max-width:940px;margin:0 auto}
+  @media(min-width:1024px){
+    .lateral{display:flex} .rodape{display:none}
+    main{margin-left:236px;padding:48px 40px 48px}
+  }
+
+  .cabecalho{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;border-bottom:1px solid var(--linha);padding-bottom:20px;margin-bottom:28px}
+  .sub{color:var(--cinza);font-size:13px;margin-top:6px}
+
+  /* peças */
+  .cartao{border:1px solid var(--linha);border-radius:var(--r2);background:var(--branco)}
+  .grade3{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:640px){.grade3{grid-template-columns:repeat(3,1fr)}}
+  .num{font-family:var(--serif);font-size:44px;margin-top:12px;font-variant-numeric:tabular-nums}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:999px;padding:9px 17px;font-size:14px;font-weight:500;cursor:pointer;background:var(--preto);color:var(--branco);transition:background .2s var(--ease),opacity .2s var(--ease)}
+  .btn:hover{background:var(--grafite)}
+  .btn.claro{background:var(--branco);color:var(--preto);border:1px solid var(--linha2)}
+  .btn.claro:hover{background:var(--nevoa)}
+  .btn.texto{background:none;color:var(--cinza);padding:7px 11px}
+  .btn.texto:hover{background:var(--nevoa);color:var(--preto)}
+  .btn.perigo:hover{color:#b42318;background:#fef3f2}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .campo{display:block;margin-bottom:16px}
+  .campo>span{display:block;font-size:12px;font-weight:600;color:var(--grafite);margin-bottom:6px}
+  .campo input,.campo select,.campo textarea{width:100%;border:1px solid var(--linha);background:var(--nevoa);border-radius:var(--r);padding:10px 13px;font-size:14px;transition:border-color .2s var(--ease),background .2s var(--ease)}
+  .campo textarea{min-height:84px;resize:vertical}
+  .campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--linha2);background:var(--branco)}
+  .dupla{display:grid;gap:0 16px;grid-template-columns:1fr}
+  @media(min-width:560px){.dupla{grid-template-columns:1fr 1fr}}
+  .marcar{display:flex;align-items:center;gap:9px;font-size:14px;margin-bottom:16px;cursor:pointer}
+  .marcar input{width:17px;height:17px;accent-color:var(--preto)}
+
+  .busca{position:relative;margin-bottom:22px}
+  .busca input{width:100%;border:1px solid var(--linha);background:var(--nevoa);border-radius:999px;padding:11px 18px 11px 42px;font-size:14px}
+  .busca input:focus{outline:none;border-color:var(--linha2);background:var(--branco)}
+  .busca svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--cinza)}
+
+  .vazio{border:1px dashed var(--linha);border-radius:var(--r2);padding:56px 24px;text-align:center}
+  .vazio p{color:var(--cinza);font-size:14px;margin-top:8px}
+
+  /* lista de pacientes */
+  .lista{display:flex;flex-direction:column}
+  .linha{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:var(--r);cursor:pointer;transition:background .2s var(--ease)}
+  .linha:hover{background:var(--nevoa)}
+  .ret{width:42px;height:42px;border-radius:999px;object-fit:cover;background:var(--nevoa);border:1px solid var(--linha);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--cinza)}
+  .linha b{font-weight:600;font-size:14.5px}
+  .linha small{color:var(--cinza);font-size:12.5px}
+
+  /* ficha */
+  .abas{display:flex;gap:4px;border-bottom:1px solid var(--linha);margin-bottom:26px;overflow-x:auto}
+  .abas button{background:none;border:0;border-bottom:2px solid transparent;padding:11px 14px;font-size:14px;color:var(--cinza);cursor:pointer;white-space:nowrap;transition:color .2s var(--ease),border-color .2s var(--ease)}
+  .abas button.ativo{color:var(--preto);border-color:var(--preto);font-weight:600}
+
+  .perfil{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+  .perfil .ret{width:64px;height:64px;font-size:22px}
+
+  /* linha do tempo */
+  .tempo{position:relative;padding-left:26px}
+  .tempo::before{content:"";position:absolute;left:4px;top:8px;bottom:8px;width:1px;background:var(--linha)}
+  .evento{position:relative;padding-bottom:28px}
+  .evento::before{content:"";position:absolute;left:-26px;top:7px;width:9px;height:9px;border-radius:999px;background:var(--branco);border:1.5px solid var(--preto)}
+  .evento.futuro::before{border-color:var(--linha2)}
+  .data{font-size:12px;color:var(--cinza);font-variant-numeric:tabular-nums}
+  .evento h3{font-size:18px;margin:3px 0 6px}
+  .obs{font-size:13.5px;color:var(--grafite);white-space:pre-wrap}
+  .meta{font-size:13px;color:var(--cinza);margin-top:4px}
+  .miniaturas{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .miniaturas figure{width:96px}
+  .miniaturas img{width:96px;height:96px;object-fit:cover;border-radius:var(--r);border:1px solid var(--linha);cursor:zoom-in;transition:opacity .2s var(--ease)}
+  .miniaturas img:hover{opacity:.85}
+  .miniaturas figcaption{font-size:11px;color:var(--cinza);margin-top:5px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+
+  /* diálogos */
+  dialog{border:0;border-radius:var(--r2);padding:0;max-width:560px;width:calc(100% - 32px);background:var(--branco);box-shadow:0 24px 60px -20px rgba(12,12,11,.3)}
+  dialog::backdrop{background:rgba(12,12,11,.32);backdrop-filter:blur(3px)}
+  dialog[open]{animation:entra .28s var(--ease)}
+  @keyframes entra{from{opacity:0;transform:translateY(10px) scale(.99)}}
+  .corpo{padding:26px}
+  .topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--linha)}
+  #lupa{max-width:min(94vw,860px);width:auto}
+  #lupa img{display:block;max-width:min(94vw,860px);max-height:86vh;border-radius:var(--r2)}
+
+  .aviso{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--preto);color:var(--branco);padding:10px 18px;border-radius:999px;font-size:13.5px;z-index:60;animation:sobe .28s var(--ease)}
+  @keyframes sobe{from{opacity:0;transform:translate(-50%,8px)}}
+  @media(min-width:1024px){.aviso{bottom:28px}}
+
+  .some{animation:apaga .2s var(--ease) forwards}
+  @keyframes apaga{to{opacity:0}}
+  main>.area{animation:fade .3s var(--ease)}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<aside class="lateral">
+  <div>
+    <div class="marca">Clínica</div>
+    <div class="etiqueta">Gestão de pacientes</div>
+  </div>
+  <nav class="menu" id="menu"></nav>
+  <p class="nota">Os dados ficam salvos neste dispositivo, no próprio navegador.</p>
+</aside>
+<nav class="rodape" id="rodape"></nav>
+
+<main><div class="area" id="tela"></div></main>
+
+<dialog id="modal"><div class="corpo" id="modalCorpo"></div></dialog>
+<dialog id="lupa"><img id="lupaImg" alt=""></dialog>
+
+<script>
+/* ---------- ícones ---------- */
+const ICO = {
+  inicio:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  pacientes:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.5 5.5a3.2 3.2 0 0 1 0 5.6M18 20a6 6 0 0 0-2-4.4"/></svg>',
+  agenda:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  busca:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  mais:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  volta:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>'
+};
+
+/* ---------- banco ---------- */
+const DB = (() => {
+  let p = null;
+  function abrir(){
+    if(p) return p;
+    p = new Promise((ok, erro) => {
+      const r = indexedDB.open('clinica', 1);
+      r.onupgradeneeded = () => {
+        const db = r.result;
+        const pac = db.createObjectStore('pacientes', {keyPath:'id'});
+        pac.createIndex('nome','nome');
+        db.createObjectStore('anamneses', {keyPath:'pacienteId'});
+        const at = db.createObjectStore('atendimentos', {keyPath:'id'});
+        at.createIndex('pacienteId','pacienteId');
+        at.createIndex('data','data');
+        const ft = db.createObjectStore('fotos', {keyPath:'id'});
+        ft.createIndex('atendimentoId','atendimentoId');
+        ft.createIndex('pacienteId','pacienteId');
+        const rt = db.createObjectStore('retornos', {keyPath:'id'});
+        rt.createIndex('pacienteId','pacienteId');
+        rt.createIndex('data','data');
+      };
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => erro(r.error);
+    });
+    return p;
+  }
+  const pedir = req => new Promise((ok, erro) => { req.onsuccess = () => ok(req.result); req.onerror = () => erro(req.error); });
+  const loja = async (nome, modo) => (await abrir()).transaction(nome, modo).objectStore(nome);
+
+  return {
+    async ler(n, id){ return pedir((await loja(n,'readonly')).get(id)); },
+    async todos(n){ return pedir((await loja(n,'readonly')).getAll()); },
+    async por(n, indice, valor){ return pedir((await loja(n,'readonly')).index(indice).getAll(valor)); },
+    async contar(n){ return pedir((await loja(n,'readonly')).count()); },
+    async gravar(n, reg){
+      const db = await abrir(), tx = db.transaction(n,'readwrite');
+      tx.objectStore(n).put(reg);
+      return new Promise((ok, erro) => { tx.oncomplete = () => ok(reg); tx.onerror = () => erro(tx.error); });
+    },
+    async apagar(n, id){
+      const db = await abrir(), tx = db.transaction(n,'readwrite');
+      tx.objectStore(n).delete(id);
+      return new Promise((ok, erro) => { tx.oncomplete = ok; tx.onerror = () => erro(tx.error); });
+    }
+  };
+})();
+
+const id = () => crypto.randomUUID();
+const hoje = () => new Date().toISOString().slice(0,10);
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dataBR = d => d ? d.split('-').reverse().join('/') : '—';
+const moeda = c => (c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const iniciais = n => n.trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
+
+/* Guarda a foto reduzida: original de celular passa de 5 MB e entope o navegador. */
+function comprimir(arquivo, largura = 1400){
+  return new Promise(ok => {
+    const img = new Image();
+    img.onload = () => {
+      const e = Math.min(1, largura / img.width);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * e);
+      c.height = Math.round(img.height * e);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => { URL.revokeObjectURL(img.src); ok(b); }, 'image/jpeg', .82);
+    };
+    img.src = URL.createObjectURL(arquivo);
+  });
+}
+
+const urls = new Set();
+function verBlob(b){ const u = URL.createObjectURL(b); urls.add(u); return u; }
+function limparUrls(){ urls.forEach(u => URL.revokeObjectURL(u)); urls.clear(); }
+
+function aviso(txt){
+  document.querySelectorAll('.aviso').forEach(a => a.remove());
+  const d = document.createElement('div');
+  d.className = 'aviso'; d.textContent = txt; d.setAttribute('role','status');
+  document.body.append(d);
+  setTimeout(() => { d.classList.add('some'); setTimeout(() => d.remove(), 200); }, 2200);
+}
+
+/* ---------- diálogos ---------- */
+const modal = document.getElementById('modal');
+const modalCorpo = document.getElementById('modalCorpo');
+function abrirModal(html){ modalCorpo.innerHTML = html; modal.showModal(); }
+function fecharModal(){ modal.close(); }
+modal.addEventListener('click', e => { if(e.target === modal) fecharModal(); });
+
+const lupa = document.getElementById('lupa');
+lupa.addEventListener('click', () => lupa.close());
+function ampliar(src){ document.getElementById('lupaImg').src = src; lupa.showModal(); }
+
+async function confirmar(texto){
+  return new Promise(ok => {
+    abrirModal(`<h2>Confirmar</h2><p class="sub" style="margin-top:10px">${esc(texto)}</p>
+      <div class="acoes"><button class="btn claro" id="nao">Cancelar</button><button class="btn" id="sim">Excluir</button></div>`);
+    modalCorpo.querySelector('#nao').onclick = () => { fecharModal(); ok(false); };
+    modalCorpo.querySelector('#sim').onclick = () => { fecharModal(); ok(true); };
+  });
+}
+
+/* ---------- navegação ---------- */
+const abas = [
+  {rota:'#/', rotulo:'Início', ico:'inicio'},
+  {rota:'#/pacientes', rotulo:'Pacientes', ico:'pacientes'},
+  {rota:'#/agenda', rotulo:'Agenda', ico:'agenda'}
+];
+document.getElementById('menu').innerHTML = abas.map(a => `<a href="${a.rota}" data-r="${a.rota}">${ICO[a.ico]}${a.rotulo}</a>`).join('');
+document.getElementById('rodape').innerHTML = abas.map(a => `<a href="${a.rota}" data-r="${a.rota}">${ICO[a.ico]}${a.rotulo}</a>`).join('');
+
+function marcarAtivo(rota){
+  const base = rota.startsWith('#/paciente/') ? '#/pacientes' : rota;
+  document.querySelectorAll('[data-r]').forEach(a => a.classList.toggle('ativo', a.dataset.r === base));
+}
+
+const tela = document.getElementById('tela');
+
+async function rotear(){
+  limparUrls();
+  const rota = location.hash || '#/';
+  marcarAtivo(rota);
+  window.scrollTo(0,0);
+  if(rota.startsWith('#/paciente/')) return telaFicha(rota.split('/')[2]);
+  if(rota === '#/pacientes') return telaPacientes();
+  if(rota === '#/agenda') return telaAgenda();
+  return telaInicio();
+}
+addEventListener('hashchange', rotear);
+
+/* ---------- início ---------- */
+async function telaInicio(){
+  const [pac, ret, at] = await Promise.all([DB.contar('pacientes'), DB.todos('retornos'), DB.por('atendimentos','data',hoje())]);
+  const agendados = ret.filter(r => !r.concluido && r.data >= hoje()).length;
+  const data = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+
+  tela.innerHTML = `
+    <div class="cabecalho"><div><h1>Início</h1><p class="sub">${data}</p></div></div>
+    <div class="grade3">
+      ${[['Pacientes',pac],['Retornos agendados',agendados],['Atendimentos hoje',at.length]]
+        .map(([r,v]) => `<div class="cartao" style="padding:24px 22px"><div class="etiqueta">${r}</div><div class="num">${v}</div></div>`).join('')}
+    </div>`;
+}
+
+/* ---------- pacientes ---------- */
+async function telaPacientes(){
+  const todas = (await DB.todos('pacientes')).sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR'));
+
+  tela.innerHTML = `
+    <div class="cabecalho"><h1>Pacientes</h1>
+      <button class="btn" id="nova">${ICO.mais}Nova paciente</button></div>
+    <div class="busca">${ICO.busca}<input id="q" type="search" placeholder="Buscar pelo nome" autocomplete="off"></div>
+    <div id="resultado"></div>`;
+
+  const alvo = document.getElementById('resultado');
+  const pintar = termo => {
+    const t = termo.trim().toLowerCase();
+    const vis = t ? todas.filter(p => p.nome.toLowerCase().includes(t)) : todas;
+
+    if(!todas.length){
+      alvo.innerHTML = `<div class="vazio"><h2>Nenhuma paciente ainda</h2><p>Cadastre a primeira para começar.</p></div>`;
+      return;
+    }
+    if(!vis.length){
+      alvo.innerHTML = `<div class="vazio"><h2>Nada encontrado</h2><p>Nenhum nome contém “${esc(termo)}”.</p></div>`;
+      return;
+    }
+    alvo.innerHTML = `<div class="lista">${vis.map(p => `
+      <div class="linha" data-id="${p.id}">
+        ${p.foto ? `<img class="ret" src="${verBlob(p.foto)}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
+        <div><b>${esc(p.nome)}</b><br><small>${p.telefone ? esc(p.telefone) : 'Sem telefone'}</small></div>
+      </div>`).join('')}</div>`;
+    alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => location.hash = `#/paciente/${l.dataset.id}`);
+  };
+
+  pintar('');
+  document.getElementById('q').oninput = e => pintar(e.target.value);
+  document.getElementById('nova').onclick = () => formPaciente();
+}
+
+function formPaciente(p){
+  const novo = !p;
+  p = p || {id:id(), nome:'', cpf:'', nascimento:'', telefone:'', whatsapp:'', email:'', obs:'', foto:null, criadoEm:Date.now()};
+  let foto = p.foto;
+
+  abrirModal(`
+    <div class="topo"><h2>${novo ? 'Nova paciente' : 'Editar dados'}</h2></div>
+    <div class="perfil">
+      <div id="previa">${foto ? `<img class="ret" src="${verBlob(foto)}" alt="">` : `<div class="ret">—</div>`}</div>
+      <button class="btn claro" id="escolher">Escolher foto</button>
+      <input type="file" id="arquivo" accept="image/*" hidden>
+    </div>
+    <label class="campo"><span>Nome</span><input id="nome" value="${esc(p.nome)}" required></label>
+    <div class="dupla">
+      <label class="campo"><span>CPF</span><input id="cpf" inputmode="numeric" value="${esc(p.cpf)}"></label>
+      <label class="campo"><span>Data de nascimento</span><input id="nascimento" type="date" value="${esc(p.nascimento)}"></label>
+      <label class="campo"><span>Telefone</span><input id="telefone" inputmode="tel" value="${esc(p.telefone)}"></label>
+      <label class="campo"><span>WhatsApp</span><input id="whatsapp" inputmode="tel" value="${esc(p.whatsapp)}"></label>
+    </div>
+    <label class="campo"><span>E-mail</span><input id="email" type="email" value="${esc(p.email)}"></label>
+    <label class="campo"><span>Observações</span><textarea id="obs">${esc(p.obs)}</textarea></label>
+    <div class="acoes">
+      <button class="btn texto" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvar">Salvar</button>
+    </div>`);
+
+  const arquivo = modalCorpo.querySelector('#arquivo');
+  modalCorpo.querySelector('#escolher').onclick = () => arquivo.click();
+  arquivo.onchange = async () => {
+    if(!arquivo.files[0]) return;
+    foto = await comprimir(arquivo.files[0], 600);
+    modalCorpo.querySelector('#previa').innerHTML = `<img class="ret" src="${verBlob(foto)}" alt="">`;
+  };
+  modalCorpo.querySelector('#cancelar').onclick = fecharModal;
+  modalCorpo.querySelector('#salvar').onclick = async () => {
+    const nome = modalCorpo.querySelector('#nome').value.trim();
+    if(!nome){ aviso('O nome é obrigatório.'); return; }
+    const reg = {...p, nome, foto,
+      cpf: modalCorpo.querySelector('#cpf').value.trim(),
+      nascimento: modalCorpo.querySelector('#nascimento').value,
+      telefone: modalCorpo.querySelector('#telefone').value.trim(),
+      whatsapp: modalCorpo.querySelector('#whatsapp').value.trim(),
+      email: modalCorpo.querySelector('#email').value.trim(),
+      obs: modalCorpo.querySelector('#obs').value.trim()};
+    await DB.gravar('pacientes', reg);
+    fecharModal();
+    aviso(novo ? 'Paciente cadastrada.' : 'Dados salvos.');
+    rotear();
+  };
+  setTimeout(() => modalCorpo.querySelector('#nome').focus(), 60);
+}
+
+/* ---------- ficha ---------- */
+let abaAtual = 'dados';
+
+async function telaFicha(pid){
+  const p = await DB.ler('pacientes', pid);
+  if(!p){ tela.innerHTML = `<div class="vazio"><h2>Paciente não encontrada</h2><p>Este registro não existe.</p></div>`; return; }
+
+  tela.innerHTML = `
+    <a href="#/pacientes" class="btn texto" style="margin-bottom:18px;padding-left:0">${ICO.volta}Pacientes</a>
+    <div class="perfil">
+      ${p.foto ? `<img class="ret" src="${verBlob(p.foto)}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
+      <div><h1 style="font-size:30px">${esc(p.nome)}</h1>
+        <p class="sub">${p.telefone ? esc(p.telefone) : 'Sem telefone'}</p></div>
+    </div>
+    <div class="abas">
+      <button data-a="dados">Dados</button>
+      <button data-a="anamnese">Anamnese</button>
+      <button data-a="historico">Histórico</button>
+    </div>
+    <div id="conteudo"></div>`;
+
+  const pintarAbas = () => tela.querySelectorAll('.abas button').forEach(b => b.classList.toggle('ativo', b.dataset.a === abaAtual));
+  tela.querySelectorAll('.abas button').forEach(b => b.onclick = () => { abaAtual = b.dataset.a; pintarAbas(); montar(); });
+
+  const montar = () => {
+    const alvo = document.getElementById('conteudo');
+    if(abaAtual === 'dados') return abaDados(alvo, p);
+    if(abaAtual === 'anamnese') return abaAnamnese(alvo, p);
+    return abaHistorico(alvo, p);
+  };
+  pintarAbas(); montar();
+}
+
+function abaDados(alvo, p){
+  const linhas = [['CPF',p.cpf],['Nascimento',dataBR(p.nascimento)],['Telefone',p.telefone],
+    ['WhatsApp',p.whatsapp],['E-mail',p.email],['Observações',p.obs]];
+  alvo.innerHTML = `
+    <div class="cartao" style="padding:8px 22px 18px">
+      ${linhas.map(([r,v]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--linha)">
+        <span class="etiqueta" style="flex:none">${r}</span>
+        <span style="text-align:right;font-size:14px;white-space:pre-wrap">${v ? esc(v) : '<span style="color:var(--linha2)">—</span>'}</span></div>`).join('')}
+    </div>
+    <div class="acoes" style="border:0">
+      <button class="btn texto perigo" id="excluir">Excluir paciente</button>
+      <button class="btn claro" id="editar">Editar dados</button>
+    </div>`;
+  alvo.querySelector('#editar').onclick = () => formPaciente(p);
+  alvo.querySelector('#excluir').onclick = async () => {
+    if(!await confirmar(`Excluir ${p.nome} e todo o histórico dela? Não tem como desfazer.`)) return;
+    for(const a of await DB.por('atendimentos','pacienteId',p.id)) await DB.apagar('atendimentos', a.id);
+    for(const f of await DB.por('fotos','pacienteId',p.id)) await DB.apagar('fotos', f.id);
+    for(const r of await DB.por('retornos','pacienteId',p.id)) await DB.apagar('retornos', r.id);
+    await DB.apagar('anamneses', p.id);
+    await DB.apagar('pacientes', p.id);
+    aviso('Paciente excluída.');
+    location.hash = '#/pacientes';
+  };
+}
+
+async function abaAnamnese(alvo, p){
+  const a = (await DB.ler('anamneses', p.id)) ||
+    {pacienteId:p.id, alergias:'', doencas:'', medicamentos:'', cirurgias:'', gestacao:false, queixa:'', objetivos:''};
+
+  const texto = [['alergias','Alergias'],['doencas','Doenças'],['medicamentos','Medicamentos'],
+    ['cirurgias','Cirurgias'],['queixa','Queixa principal'],['objetivos','Objetivos do tratamento']];
+
+  alvo.innerHTML = `
+    <div class="cartao" style="padding:24px 22px 8px">
+      ${texto.map(([k,r]) => `<label class="campo"><span>${r}</span><textarea data-k="${k}">${esc(a[k])}</textarea></label>`).join('')}
+      <label class="marcar"><input type="checkbox" data-k="gestacao" ${a.gestacao ? 'checked' : ''}>Gestante</label>
+    </div>
+    <p class="sub" style="text-align:right;margin-top:12px" id="estado">Salva sozinho enquanto você escreve.</p>`;
+
+  let timer;
+  const salvar = async () => {
+    alvo.querySelectorAll('[data-k]').forEach(c => a[c.dataset.k] = c.type === 'checkbox' ? c.checked : c.value);
+    a.atualizadoEm = Date.now();
+    await DB.gravar('anamneses', a);
+    alvo.querySelector('#estado').textContent = 'Salvo às ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  };
+  alvo.querySelectorAll('[data-k]').forEach(c => {
+    c.oninput = () => { clearTimeout(timer); timer = setTimeout(salvar, 600); };
+    if(c.type === 'checkbox') c.onchange = salvar;
+  });
+}
+
+async function abaHistorico(alvo, p){
+  const [ats, rets] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id)]);
+  const fotos = await DB.por('fotos','pacienteId',p.id);
+
+  const eventos = [
+    ...ats.map(a => ({tipo:'atendimento', data:a.data, dado:a})),
+    ...rets.map(r => ({tipo:'retorno', data:r.data, dado:r}))
+  ].sort((x,y) => y.data.localeCompare(x.data));
+
+  alvo.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap">
+      <button class="btn" id="novoAt">${ICO.mais}Novo atendimento</button>
+      <button class="btn claro" id="novoRet">Marcar retorno</button>
+    </div>
+    <div id="tempo"></div>`;
+
+  alvo.querySelector('#novoAt').onclick = () => formAtendimento(p);
+  alvo.querySelector('#novoRet').onclick = () => formRetorno(p);
+
+  const t = alvo.querySelector('#tempo');
+  if(!eventos.length){
+    t.innerHTML = `<div class="vazio"><h2>Sem histórico ainda</h2><p>Registre o primeiro atendimento desta paciente.</p></div>`;
+    return;
+  }
+
+  t.className = 'tempo';
+  t.innerHTML = eventos.map(e => {
+    if(e.tipo === 'retorno'){
+      const futuro = e.data >= hoje() && !e.dado.concluido;
+      return `<div class="evento ${futuro ? 'futuro' : ''}">
+        <div class="data">${dataBR(e.data)}</div>
+        <h3>Retorno${e.dado.concluido ? ' · concluído' : futuro ? ' · marcado' : ''}</h3>
+        ${e.dado.obs ? `<div class="obs">${esc(e.dado.obs)}</div>` : ''}
+        <div style="margin-top:8px;display:flex;gap:4px">
+          ${!e.dado.concluido ? `<button class="btn texto" data-ok="${e.dado.id}">Marcar como feito</button>` : ''}
+          <button class="btn texto perigo" data-delr="${e.dado.id}">Excluir</button>
+        </div></div>`;
+    }
+    const a = e.dado;
+    const minhas = fotos.filter(f => f.atendimentoId === a.id).sort((x,y) => x.momento.localeCompare(y.momento));
+    return `<div class="evento">
+      <div class="data">${dataBR(a.data)}</div>
+      <h3>${esc(a.procedimento)}</h3>
+      <div class="meta">${[a.produto && esc(a.produto), a.quantidade && esc(a.quantidade), a.valorCentavos ? moeda(a.valorCentavos) : ''].filter(Boolean).join(' · ') || '—'}</div>
+      ${a.obs ? `<div class="obs" style="margin-top:8px">${esc(a.obs)}</div>` : ''}
+      ${minhas.length ? `<div class="miniaturas">${minhas.map(f => `
+        <figure><img src="${verBlob(f.arquivo)}" alt="${f.momento}" data-zoom>
+        <figcaption>${f.momento}</figcaption></figure>`).join('')}</div>` : ''}
+      <div style="margin-top:10px"><button class="btn texto perigo" data-dela="${a.id}">Excluir</button></div>
+    </div>`;
+  }).join('');
+
+  t.querySelectorAll('[data-zoom]').forEach(i => i.onclick = () => ampliar(i.src));
+  t.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => {
+    const r = await DB.ler('retornos', b.dataset.ok);
+    await DB.gravar('retornos', {...r, concluido:true});
+    aviso('Retorno concluído.'); abaHistorico(alvo, p);
+  });
+  t.querySelectorAll('[data-delr]').forEach(b => b.onclick = async () => {
+    if(!await confirmar('Excluir este retorno?')) return;
+    await DB.apagar('retornos', b.dataset.delr);
+    aviso('Retorno excluído.'); abaHistorico(alvo, p);
+  });
+  t.querySelectorAll('[data-dela]').forEach(b => b.onclick = async () => {
+    if(!await confirmar('Excluir este atendimento e as fotos dele?')) return;
+    for(const f of await DB.por('fotos','atendimentoId',b.dataset.dela)) await DB.apagar('fotos', f.id);
+    await DB.apagar('atendimentos', b.dataset.dela);
+    aviso('Atendimento excluído.'); abaHistorico(alvo, p);
+  });
+}
+
+/* ---------- atendimento ---------- */
+function formAtendimento(p){
+  const novas = {antes:[], depois:[]};
+
+  abrirModal(`
+    <div class="topo"><h2>Novo atendimento</h2></div>
+    <div class="dupla">
+      <label class="campo"><span>Data</span><input id="data" type="date" value="${hoje()}"></label>
+      <label class="campo"><span>Procedimento</span><input id="procedimento" placeholder="Ex.: Botox"></label>
+      <label class="campo"><span>Produto utilizado</span><input id="produto"></label>
+      <label class="campo"><span>Quantidade</span><input id="quantidade" placeholder="Ex.: 50 U"></label>
+    </div>
+    <label class="campo"><span>Valor</span><input id="valor" inputmode="decimal" placeholder="0,00"></label>
+    <label class="campo"><span>Observações</span><textarea id="obs"></textarea></label>
+    <div class="dupla">
+      ${['antes','depois'].map(m => `
+        <div class="campo"><span>Fotos ${m}</span>
+          <button class="btn claro" data-add="${m}" style="width:100%">Adicionar foto</button>
+          <input type="file" data-in="${m}" accept="image/*" multiple hidden>
+          <div class="miniaturas" data-previa="${m}"></div>
+        </div>`).join('')}
+    </div>
+    <div class="acoes">
+      <button class="btn texto" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvar">Salvar atendimento</button>
+    </div>`);
+
+  ['antes','depois'].forEach(m => {
+    const entrada = modalCorpo.querySelector(`[data-in="${m}"]`);
+    modalCorpo.querySelector(`[data-add="${m}"]`).onclick = () => entrada.click();
+    entrada.onchange = async () => {
+      for(const f of entrada.files) novas[m].push(await comprimir(f));
+      modalCorpo.querySelector(`[data-previa="${m}"]`).innerHTML =
+        novas[m].map(b => `<figure><img src="${verBlob(b)}" alt=""></figure>`).join('');
+      entrada.value = '';
+    };
+  });
+
+  modalCorpo.querySelector('#cancelar').onclick = fecharModal;
+  modalCorpo.querySelector('#salvar').onclick = async () => {
+    const procedimento = modalCorpo.querySelector('#procedimento').value.trim();
+    if(!procedimento){ aviso('Informe o procedimento.'); return; }
+    const bruto = modalCorpo.querySelector('#valor').value.replace(/\./g,'').replace(',','.');
+    const at = {
+      id:id(), pacienteId:p.id,
+      data: modalCorpo.querySelector('#data').value || hoje(),
+      procedimento,
+      produto: modalCorpo.querySelector('#produto').value.trim(),
+      quantidade: modalCorpo.querySelector('#quantidade').value.trim(),
+      valorCentavos: Math.round((parseFloat(bruto) || 0) * 100),
+      obs: modalCorpo.querySelector('#obs').value.trim(),
+      criadoEm: Date.now()
+    };
+    await DB.gravar('atendimentos', at);
+    for(const m of ['antes','depois'])
+      for(const b of novas[m])
+        await DB.gravar('fotos', {id:id(), atendimentoId:at.id, pacienteId:p.id, momento:m, arquivo:b, criadoEm:Date.now()});
+    fecharModal();
+    aviso('Atendimento salvo.');
+    telaFicha(p.id);
+  };
+}
+
+function formRetorno(p){
+  abrirModal(`
+    <div class="topo"><h2>Marcar retorno</h2></div>
+    <label class="campo"><span>Data</span><input id="data" type="date" value="${hoje()}"></label>
+    <label class="campo"><span>Observações</span><textarea id="obs"></textarea></label>
+    <div class="acoes">
+      <button class="btn texto" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvar">Marcar</button>
+    </div>`);
+  modalCorpo.querySelector('#cancelar').onclick = fecharModal;
+  modalCorpo.querySelector('#salvar').onclick = async () => {
+    await DB.gravar('retornos', {
+      id:id(), pacienteId:p.id,
+      data: modalCorpo.querySelector('#data').value || hoje(),
+      obs: modalCorpo.querySelector('#obs').value.trim(),
+      concluido:false, criadoEm:Date.now()
+    });
+    fecharModal();
+    aviso('Retorno marcado.');
+    telaFicha(p.id);
+  };
+}
+
+/* ---------- agenda ---------- */
+async function telaAgenda(){
+  const [rets, pacs] = await Promise.all([DB.todos('retornos'), DB.todos('pacientes')]);
+  const nome = pid => (pacs.find(p => p.id === pid) || {}).nome || 'Paciente removida';
+  const abertos = rets.filter(r => !r.concluido).sort((a,b) => a.data.localeCompare(b.data));
+
+  tela.innerHTML = `
+    <div class="cabecalho"><div><h1>Agenda</h1><p class="sub">Retornos marcados</p></div></div>
+    <div id="lista"></div>`;
+
+  const alvo = document.getElementById('lista');
+  if(!abertos.length){
+    alvo.innerHTML = `<div class="vazio"><h2>Nenhum retorno marcado</h2><p>Os retornos são marcados no histórico da paciente.</p></div>`;
+    return;
+  }
+
+  const atrasados = abertos.filter(r => r.data < hoje());
+  const proximos = abertos.filter(r => r.data >= hoje());
+  const bloco = (titulo, itens) => !itens.length ? '' : `
+    <div class="etiqueta" style="margin:26px 0 10px">${titulo}</div>
+    <div class="lista">${itens.map(r => `
+      <div class="linha" data-id="${r.pacienteId}">
+        <div class="ret" style="font-size:12px">${dataBR(r.data).slice(0,5)}</div>
+        <div><b>${esc(nome(r.pacienteId))}</b><br><small>${r.obs ? esc(r.obs) : 'Retorno'}</small></div>
+      </div>`).join('')}</div>`;
+
+  alvo.innerHTML = bloco('Atrasados', atrasados) + bloco('Próximos', proximos);
+  alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${l.dataset.id}`; });
+}
+
+rotear();
+</script>
+</body>
+</html>
