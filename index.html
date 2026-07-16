@@ -171,6 +171,32 @@
   .sair{display:flex;align-items:center;gap:9px;width:100%;border:0;background:none;cursor:pointer;padding:9px 12px;border-radius:var(--r);font-size:13px;color:var(--cinza);text-align:left;transition:background .2s var(--ease),color .2s var(--ease)}
   .sair:hover{background:var(--nevoa);color:var(--preto)}
 
+  /* editor de fotos */
+  #editor{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;background:var(--branco)}
+  #editor.aberto{display:flex}
+  .edTopo{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));border-bottom:1px solid var(--linha);background:rgba(255,255,255,.94);backdrop-filter:blur(14px)}
+  .edTopo .btn{padding:8px 15px}
+  .edPalco{flex:1;position:relative;overflow:hidden;background:#f2f2f0;touch-action:none}
+  .edPalco canvas{position:absolute;left:0;top:0;transform-origin:0 0}
+  .edBarra{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--linha);background:rgba(255,255,255,.94);backdrop-filter:blur(14px)}
+  .fer{width:40px;height:40px;border:0;border-radius:999px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--grafite);transition:background .15s var(--ease),color .15s var(--ease)}
+  .fer:hover{background:var(--nevoa)}
+  .fer.ativo{background:var(--preto);color:var(--branco)}
+  .fer:disabled{opacity:.3;cursor:default}
+  .cor{width:26px;height:26px;border-radius:999px;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+  .cor.ativo{border-color:var(--preto);transform:scale(1.12)}
+  .esp{width:34px;height:34px;border:0;border-radius:999px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .esp i{border-radius:999px;background:var(--grafite);display:block}
+  .esp.ativo{background:var(--nevoa)}
+  .esp.ativo i{background:var(--preto)}
+  .edSep{width:1px;height:24px;background:var(--linha);margin:0 4px}
+  .soCaneta{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--cinza);cursor:pointer;padding:0 6px}
+  .soCaneta input{width:15px;height:15px;accent-color:var(--preto)}
+  .alternar{display:flex;gap:2px;background:var(--nevoa);border-radius:999px;padding:3px}
+  .alternar button{border:0;background:none;border-radius:999px;padding:6px 14px;font-size:12.5px;cursor:pointer;color:var(--cinza)}
+  .alternar button.ativo{background:var(--branco);color:var(--preto);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  #lupaAcoes{display:flex;justify-content:center;gap:8px;padding:12px;background:var(--branco)}
+
   .aviso{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--preto);color:var(--branco);padding:10px 18px;border-radius:999px;font-size:13.5px;z-index:60;animation:sobe .28s var(--ease)}
   @keyframes sobe{from{opacity:0;transform:translate(-50%,8px)}}
   @media(min-width:1024px){.aviso{bottom:28px}}
@@ -220,7 +246,20 @@
 </div>
 
 <dialog id="modal"><div class="corpo" id="modalCorpo"></div></dialog>
-<dialog id="lupa"><img id="lupaImg" alt=""></dialog>
+<dialog id="lupa"><img id="lupaImg" alt=""><div id="lupaAcoes"></div></dialog>
+
+<div id="editor">
+  <div class="edTopo">
+    <button class="btn texto" id="edFechar">Cancelar</button>
+    <span class="etiqueta">Marcações</span>
+    <button class="btn" id="edSalvar">Concluir</button>
+  </div>
+  <div class="edPalco" id="edPalco">
+    <canvas id="cvFoto"></canvas>
+    <canvas id="cvTinta"></canvas>
+  </div>
+  <div class="edBarra" id="edBarra"></div>
+</div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
@@ -343,7 +382,7 @@ function fecharModal(){ modal.close(); }
 modal.addEventListener('click', e => { if(e.target === modal) fecharModal(); });
 
 const lupa = document.getElementById('lupa');
-lupa.addEventListener('click', () => lupa.close());
+lupa.addEventListener('click', e => { if(!e.target.closest('#lupaAcoes')) lupa.close(); });
 function ampliar(src){ document.getElementById('lupaImg').src = src; lupa.showModal(); }
 
 async function confirmar(texto){
@@ -594,7 +633,8 @@ async function abaAnamnese(alvo, p){
 }
 
 async function abaHistorico(alvo, p){
-  const [ats, rets] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id)]);
+  const [ats, rets, ans] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id), DB.todos('anotacoes')]);
+  const anotadas = new Set(ans.filter(a => a.imagem).map(a => a.id));
 
   const eventos = [
     ...ats.map(a => ({tipo:'atendimento', data:a.data, dado:a})),
@@ -639,16 +679,12 @@ async function abaHistorico(alvo, p){
       ${a.obs ? `<div class="obs" style="margin-top:8px">${esc(a.obs)}</div>` : ''}
       ${minhas.length ? `<div class="miniaturas">${minhas.map(f => `
         <figure><img src="${f.thumb}" alt="${f.momento}" data-zoom="${f.id}">
-        <figcaption>${f.momento}</figcaption></figure>`).join('')}</div>` : ''}
+        <figcaption>${f.momento}${anotadas.has(f.id) ? ' ·<b style="color:var(--verde)"> anotada</b>' : ''}</figcaption></figure>`).join('')}</div>` : ''}
       <div style="margin-top:10px"><button class="btn texto perigo" data-dela="${a.id}">Excluir</button></div>
     </div>`;
   }).join('');
 
-  t.querySelectorAll('[data-zoom]').forEach(i => i.onclick = async () => {
-    ampliar(i.src);                                   // mostra a miniatura na hora
-    const f = await DB.ler('fotos', i.dataset.zoom);  // e troca pela grande quando chega
-    if(f) document.getElementById('lupaImg').src = f.img;
-  });
+  t.querySelectorAll('[data-zoom]').forEach(i => i.onclick = () => abrirFoto(i.dataset.zoom, i.src, () => telaFicha(p.id)));
   t.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => {
     const r = await DB.ler('retornos', b.dataset.ok);
     await DB.gravar('retornos', {...r, concluido:true});
@@ -661,10 +697,41 @@ async function abaHistorico(alvo, p){
   });
   t.querySelectorAll('[data-dela]').forEach(b => b.onclick = async () => {
     if(!await confirmar('Excluir este atendimento e as fotos dele?')) return;
-    for(const f of await DB.por('fotos','atendimentoId',b.dataset.dela)) await DB.apagar('fotos', f.id);
+    for(const f of await DB.por('fotos','atendimentoId',b.dataset.dela)){
+      await DB.apagar('anotacoes', f.id).catch(() => {});
+      await DB.apagar('fotos', f.id);
+    }
     await DB.apagar('atendimentos', b.dataset.dela);
     aviso('Atendimento excluído.'); abaHistorico(alvo, p);
   });
+}
+
+/* Visualização da foto: alterna Original/Anotada e abre o editor. */
+async function abrirFoto(fid, previa, depois){
+  const acoes = document.getElementById('lupaAcoes');
+  const imgEl = document.getElementById('lupaImg');
+  imgEl.src = previa; acoes.innerHTML = ''; lupa.showModal();
+
+  const [f, an] = await Promise.all([DB.ler('fotos', fid), DB.ler('anotacoes', fid)]);
+  if(!f) return;
+  const temAnotacao = an && an.imagem;
+  let mostrando = temAnotacao ? 'anotada' : 'original';
+  const pintar = () => {
+    imgEl.src = mostrando === 'anotada' ? an.imagem : f.img;
+    acoes.innerHTML = `
+      ${temAnotacao ? `<div class="alternar">
+        <button data-v="original" class="${mostrando === 'original' ? 'ativo' : ''}">Original</button>
+        <button data-v="anotada" class="${mostrando === 'anotada' ? 'ativo' : ''}">Anotada</button>
+      </div>` : ''}
+      <button class="btn claro" id="lupaEditar">Editar</button>`;
+    acoes.querySelectorAll('[data-v]').forEach(b => b.onclick = e => { e.stopPropagation(); mostrando = b.dataset.v; pintar(); });
+    acoes.querySelector('#lupaEditar').onclick = e => {
+      e.stopPropagation();
+      lupa.close();
+      Editor.abrir(f.img, fid, an ? an.tracos : [], depois);
+    };
+  };
+  pintar();
 }
 
 /* ---------- atendimento ---------- */
@@ -1103,6 +1170,265 @@ async function formDespesa(d, depois){
     depois && depois();
   };
 }
+
+/* ---------- editor de fotos ----------
+   As marcações são traços vetoriais gravados em 'anotacoes' (documento separado,
+   um por foto). A foto original nunca é alterada. */
+const Editor = (() => {
+  const el = document.getElementById('editor');
+  const palco = document.getElementById('edPalco');
+  const cvFoto = document.getElementById('cvFoto');
+  const cvTinta = document.getElementById('cvTinta');
+  const ctxF = cvFoto.getContext('2d');
+  const ctxT = cvTinta.getContext('2d');
+
+  const CORES = ['#0c0c0b','#c0392b','#546054','#1d5fbf','#e6a817','#ffffff'];
+  const ESPESSURAS = [3, 6, 12];
+
+  let img = null, fotoId = null, aoConcluir = null;
+  let tracos = [], refazerPilha = [];
+  let ferramenta = 'caneta', cor = CORES[1], esp = 1, soCaneta = false;
+  let vista = {x:0, y:0, k:1};
+  let desenhando = null;          // traço em andamento
+  let toques = new Map();         // ponteiros ativos no palco
+  let pinca = null;               // estado do gesto de dois dedos
+
+  /* ----- barra de ferramentas ----- */
+  const FERS = {
+    caneta:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>',
+    marca:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l6-6 4 4-6 6H9v-4z" opacity=".45"/><path d="M9 11l6-6 4 4-6 6H9v-4zM4 20h9"/></svg>',
+    borracha:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 20l-4-4a2 2 0 0 1 0-2.8l8.2-8.2a2 2 0 0 1 2.8 0l6 6a2 2 0 0 1 0 2.8L14 20H7z"/><path d="M6 12l7 7"/></svg>',
+    desfazer:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+    refazer:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>',
+    lixo:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>'
+  };
+
+  function montarBarra(){
+    document.getElementById('edBarra').innerHTML = `
+      <button class="fer" data-fer="caneta" title="Caneta">${FERS.caneta}</button>
+      <button class="fer" data-fer="marca" title="Marca-texto">${FERS.marca}</button>
+      <button class="fer" data-fer="borracha" title="Borracha (toque no traço)">${FERS.borracha}</button>
+      <span class="edSep"></span>
+      ${CORES.map((c,i) => `<button class="cor" data-cor="${i}" style="background:${c}"></button>`).join('')}
+      <span class="edSep"></span>
+      ${ESPESSURAS.map((e,i) => `<button class="esp" data-esp="${i}"><i style="width:${5+i*4}px;height:${5+i*4}px"></i></button>`).join('')}
+      <span class="edSep"></span>
+      <button class="fer" id="edDesfazer" title="Desfazer">${FERS.desfazer}</button>
+      <button class="fer" id="edRefazer" title="Refazer">${FERS.refazer}</button>
+      <button class="fer" id="edLimpar" title="Limpar tudo">${FERS.lixo}</button>
+      <span class="edSep"></span>
+      <label class="soCaneta"><input type="checkbox" id="edSoCaneta">Só caneta</label>`;
+
+    el.querySelectorAll('[data-fer]').forEach(b => b.onclick = () => { ferramenta = b.dataset.fer; pintarBarra(); });
+    el.querySelectorAll('[data-cor]').forEach(b => b.onclick = () => { cor = CORES[+b.dataset.cor]; if(ferramenta === 'borracha') ferramenta = 'caneta'; pintarBarra(); });
+    el.querySelectorAll('[data-esp]').forEach(b => b.onclick = () => { esp = +b.dataset.esp; pintarBarra(); });
+    document.getElementById('edDesfazer').onclick = desfazer;
+    document.getElementById('edRefazer').onclick = refazer;
+    document.getElementById('edLimpar').onclick = limpar;
+    document.getElementById('edSoCaneta').onchange = e => soCaneta = e.target.checked;
+  }
+
+  function pintarBarra(){
+    el.querySelectorAll('[data-fer]').forEach(b => b.classList.toggle('ativo', b.dataset.fer === ferramenta));
+    el.querySelectorAll('[data-cor]').forEach(b => b.classList.toggle('ativo', CORES[+b.dataset.cor] === cor && ferramenta !== 'borracha'));
+    el.querySelectorAll('[data-esp]').forEach(b => b.classList.toggle('ativo', +b.dataset.esp === esp));
+    document.getElementById('edDesfazer').disabled = !tracos.length;
+    document.getElementById('edRefazer').disabled = !refazerPilha.length;
+  }
+
+  /* ----- coordenadas: tela -> imagem ----- */
+  function paraImagem(e){
+    const r = palco.getBoundingClientRect();
+    return { x: (e.clientX - r.left - vista.x) / vista.k,
+             y: (e.clientY - r.top - vista.y) / vista.k,
+             p: e.pressure && e.pointerType === 'pen' ? e.pressure : 1 };
+  }
+
+  /* ----- desenhar tudo ----- */
+  function aplicarVista(){
+    const t = `translate(${vista.x}px,${vista.y}px) scale(${vista.k})`;
+    cvFoto.style.transform = t; cvTinta.style.transform = t;
+  }
+
+  function tracar(ctx, tr){
+    if(tr.pts.length < 2) {
+      const p = tr.pts[0];
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, tr.larg * (p.p || 1) / 2, 0, 7);
+      ctx.fillStyle = tr.cor; ctx.globalAlpha = tr.marca ? .35 : 1;
+      ctx.fill(); ctx.globalAlpha = 1;
+      return;
+    }
+    ctx.strokeStyle = tr.cor;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.globalAlpha = tr.marca ? .35 : 1;
+    for(let i = 1; i < tr.pts.length; i++){
+      const a = tr.pts[i-1], b = tr.pts[i];
+      ctx.beginPath();
+      ctx.lineWidth = tr.larg * ((a.p + b.p) / 2 || 1);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function redesenhar(){
+    ctxT.clearRect(0, 0, cvTinta.width, cvTinta.height);
+    tracos.forEach(t => tracar(ctxT, t));
+    if(desenhando) tracar(ctxT, desenhando);
+  }
+
+  /* ----- borracha de traços: apaga o traço tocado ----- */
+  function apagarEm(pt){
+    for(let i = tracos.length - 1; i >= 0; i--){
+      const alvo = (tracos[i].larg + 14) / vista.k;
+      if(tracos[i].pts.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < alvo)){
+        refazerPilha = [];
+        tracos.splice(i, 1);
+        redesenhar(); pintarBarra();
+        return;
+      }
+    }
+  }
+
+  function desfazer(){ if(tracos.length){ refazerPilha.push(tracos.pop()); redesenhar(); pintarBarra(); } }
+  function refazer(){ if(refazerPilha.length){ tracos.push(refazerPilha.pop()); redesenhar(); pintarBarra(); } }
+  async function limpar(){
+    if(!tracos.length) return;
+    if(!await perguntar('Limpar marcações', 'Apagar todas as marcações desta foto?', 'Limpar', 'Cancelar')) return;
+    refazerPilha = []; tracos = []; redesenhar(); pintarBarra();
+  }
+
+  /* ----- gestos ----- */
+  palco.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    palco.setPointerCapture(e.pointerId);
+    toques.set(e.pointerId, e);
+
+    if(toques.size === 2){
+      // segundo dedo: vira pinça e cancela o traço que tinha começado
+      desenhando = null; redesenhar();
+      const [a, b] = [...toques.values()];
+      pinca = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+                cx: (a.clientX + b.clientX) / 2, cy: (a.clientY + b.clientY) / 2,
+                vista: {...vista} };
+      return;
+    }
+
+    const dedoNavega = soCaneta && e.pointerType === 'touch';
+    if(dedoNavega){ pinca = {arrasto:true, x0:e.clientX, y0:e.clientY, vista:{...vista}}; return; }
+
+    const pt = paraImagem(e);
+    if(ferramenta === 'borracha'){ apagarEm(pt); desenhando = {borracha:true}; return; }
+    desenhando = { cor, larg: ESPESSURAS[esp], marca: ferramenta === 'marca', pts: [pt] };
+    redesenhar();
+  });
+
+  palco.addEventListener('pointermove', e => {
+    if(!toques.has(e.pointerId)) return;
+    toques.set(e.pointerId, e);
+
+    if(pinca && toques.size === 2){
+      const [a, b] = [...toques.values()];
+      const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      const cx = (a.clientX + b.clientX) / 2, cy = (a.clientY + b.clientY) / 2;
+      const k = Math.min(8, Math.max(.3, pinca.vista.k * d / pinca.d));
+      const r = palco.getBoundingClientRect();
+      // o ponto da imagem sob o centro da pinça continua sob o centro
+      const ix = (pinca.cx - r.left - pinca.vista.x) / pinca.vista.k;
+      const iy = (pinca.cy - r.top - pinca.vista.y) / pinca.vista.k;
+      vista = { k, x: cx - r.left - ix * k, y: cy - r.top - iy * k };
+      aplicarVista();
+      return;
+    }
+    if(pinca && pinca.arrasto){
+      vista.x = pinca.vista.x + e.clientX - pinca.x0;
+      vista.y = pinca.vista.y + e.clientY - pinca.y0;
+      aplicarVista();
+      return;
+    }
+    if(!desenhando) return;
+    const pt = paraImagem(e);
+    if(desenhando.borracha){ apagarEm(pt); return; }
+    // pontos coalescidos deixam o traço liso na velocidade do Pencil
+    const eventos = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    eventos.forEach(ev => desenhando.pts.push(paraImagem(ev)));
+    redesenhar();
+  });
+
+  const soltar = e => {
+    toques.delete(e.pointerId);
+    if(toques.size < 2) pinca = pinca && pinca.arrasto && toques.size === 1 ? pinca : null;
+    if(desenhando && !desenhando.borracha && desenhando.pts.length){
+      tracos.push(desenhando); refazerPilha = [];
+    }
+    desenhando = null;
+    redesenhar(); pintarBarra();
+  };
+  palco.addEventListener('pointerup', soltar);
+  palco.addEventListener('pointercancel', soltar);
+
+  /* roda do mouse: zoom no computador */
+  palco.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = palco.getBoundingClientRect();
+    const k = Math.min(8, Math.max(.3, vista.k * (e.deltaY < 0 ? 1.12 : .89)));
+    const ix = (e.clientX - r.left - vista.x) / vista.k;
+    const iy = (e.clientY - r.top - vista.y) / vista.k;
+    vista = { k, x: e.clientX - r.left - ix * k, y: e.clientY - r.top - iy * k };
+    aplicarVista();
+  }, {passive:false});
+
+  /* ----- abrir e fechar ----- */
+  function enquadrar(){
+    const r = palco.getBoundingClientRect();
+    const k = Math.min(r.width / img.width, r.height / img.height) * .96;
+    vista = { k, x: (r.width - img.width * k) / 2, y: (r.height - img.height * k) / 2 };
+    aplicarVista();
+  }
+
+  async function abrir(imagem, idFoto, tracosSalvos, depois){
+    img = new Image();
+    await new Promise(ok => { img.onload = ok; img.src = imagem; });
+    fotoId = idFoto; aoConcluir = depois;
+    tracos = (tracosSalvos || []).map(t => ({...t, pts: t.pts.map(p => ({...p}))}));
+    refazerPilha = []; desenhando = null; toques.clear(); pinca = null;
+    ferramenta = 'caneta';
+
+    cvFoto.width = cvTinta.width = img.width;
+    cvFoto.height = cvTinta.height = img.height;
+    ctxF.drawImage(img, 0, 0);
+
+    montarBarra(); pintarBarra();
+    el.classList.add('aberto');
+    enquadrar(); redesenhar();
+  }
+
+  document.getElementById('edFechar').onclick = () => el.classList.remove('aberto');
+  document.getElementById('edSalvar').onclick = async () => {
+    // grava os traços e uma imagem pronta (foto + marcações) para exibição rápida
+    redesenhar();
+    const junta = document.createElement('canvas');
+    junta.width = img.width; junta.height = img.height;
+    const jc = junta.getContext('2d');
+    jc.drawImage(cvFoto, 0, 0); jc.drawImage(cvTinta, 0, 0);
+    let qualidade = .82, saida = junta.toDataURL('image/jpeg', qualidade);
+    if(saida.length > 900000) saida = junta.toDataURL('image/jpeg', .6);
+
+    await DB.gravar('anotacoes', {
+      id: fotoId,
+      tracos: tracos.map(t => ({cor:t.cor, larg:t.larg, marca:!!t.marca,
+        pts: t.pts.map(p => ({x:Math.round(p.x), y:Math.round(p.y), p:Math.round((p.p||1)*100)/100}))})),
+      imagem: tracos.length ? saida : null,
+      atualizadoEm: Date.now()
+    });
+    el.classList.remove('aberto');
+    aviso(tracos.length ? 'Marcações salvas.' : 'Marcações removidas.');
+    aoConcluir && aoConcluir();
+  };
+
+  return { abrir };
+})();
 
 /* ---------- entrar e sair ---------- */
 const erroLogin = document.getElementById('erroLogin');
