@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" id="favicon"><link rel="apple-touch-icon" id="favicon2">
+<title>Emylle Machado</title>
+<style>
+  :root{
+    --branco:#fff; --nevoa:#f7f7f6; --linha:#e9e9e6; --linha2:#d8d8d4;
+    --cinza:#8b8b85; --grafite:#4a4a46; --preto:#0c0c0b;
+    --verde:#546054; --verde-fundo:#eef0ee;
+    --mono:url(data:image/png;base64,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);
+    --r:12px; --r2:18px;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.32,.72,0,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  .mono{display:block;background:var(--mono) center/contain no-repeat;flex:none}
+  body{background:var(--branco);color:var(--preto);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.015em;line-height:1.1}
+  h1{font-size:34px}
+  h2{font-size:22px}
+  input,select,textarea,button{font:inherit;color:inherit}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--preto);color:var(--branco)}
+  :focus-visible{outline:2px solid var(--preto);outline-offset:2px;border-radius:4px}
+
+  /* navegação */
+  .lateral{position:fixed;inset:0 auto 0 0;width:236px;border-right:1px solid var(--linha);padding:32px 20px;display:none;flex-direction:column}
+  .marca{padding:0 12px}
+  .marca .mono{height:38px;width:31px}
+  .marca b{display:block;font-family:var(--serif);font-size:21px;font-weight:400;margin-top:12px;letter-spacing:.01em}
+  .etiqueta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cinza)}
+  .menu{margin-top:38px;display:flex;flex-direction:column;gap:2px}
+  .menu a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r);color:var(--cinza);font-size:14px;transition:background .2s var(--ease),color .2s var(--ease)}
+  .menu a:hover{background:var(--nevoa);color:var(--preto)}
+  .menu a.ativo{background:var(--verde-fundo);color:var(--verde);font-weight:600}
+  .nota{margin-top:auto;padding:0 12px;font-size:12px;color:var(--cinza)}
+
+  .topoCel{position:fixed;inset:0 0 auto 0;z-index:20;display:flex;align-items:center;gap:10px;height:54px;padding:0 20px;border-bottom:1px solid var(--linha);background:rgba(255,255,255,.92);backdrop-filter:blur(16px)}
+  .topoCel .mono{height:26px;width:21px}
+  .topoCel span{font-family:var(--serif);font-size:17px}
+  .rodape{position:fixed;inset:auto 0 0 0;z-index:20;display:flex;border-top:1px solid var(--linha);background:rgba(255,255,255,.92);backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}
+  .rodape a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 13px;font-size:11px;color:var(--cinza);transition:color .2s var(--ease)}
+  .rodape a.ativo{color:var(--verde);font-weight:600}
+
+  main{padding:82px 20px 96px}
+  .area{max-width:940px;margin:0 auto}
+  @media(min-width:1024px){
+    .lateral{display:flex} .rodape,.topoCel{display:none}
+    main{margin-left:236px;padding:48px 40px 48px}
+  }
+
+  .cabecalho{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;border-bottom:1px solid var(--linha);padding-bottom:20px;margin-bottom:28px}
+  .sub{color:var(--cinza);font-size:13px;margin-top:6px}
+
+  /* peças */
+  .cartao{border:1px solid var(--linha);border-radius:var(--r2);background:var(--branco)}
+  .grade3{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:640px){.grade3{grid-template-columns:repeat(3,1fr)}}
+  .num{font-family:var(--serif);font-size:44px;margin-top:12px;font-variant-numeric:tabular-nums}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:999px;padding:9px 17px;font-size:14px;font-weight:500;cursor:pointer;background:var(--verde);color:var(--branco);transition:background .2s var(--ease),opacity .2s var(--ease)}
+  .btn:hover{background:#424c42}
+  .btn.claro{background:var(--branco);color:var(--preto);border:1px solid var(--linha2)}
+  .btn.claro:hover{background:var(--nevoa)}
+  .btn.texto{background:none;color:var(--cinza);padding:7px 11px}
+  .btn.texto:hover{background:var(--nevoa);color:var(--preto)}
+  .btn.perigo:hover{color:#b42318;background:#fef3f2}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .campo{display:block;margin-bottom:16px}
+  .campo>span{display:block;font-size:12px;font-weight:600;color:var(--grafite);margin-bottom:6px}
+  .campo input,.campo select,.campo textarea{width:100%;border:1px solid var(--linha);background:var(--nevoa);border-radius:var(--r);padding:10px 13px;font-size:14px;transition:border-color .2s var(--ease),background .2s var(--ease)}
+  .campo textarea{min-height:84px;resize:vertical}
+  .campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--linha2);background:var(--branco)}
+  .dupla{display:grid;gap:0 16px;grid-template-columns:1fr}
+  @media(min-width:560px){.dupla{grid-template-columns:1fr 1fr}}
+  .marcar{display:flex;align-items:center;gap:9px;font-size:14px;margin-bottom:16px;cursor:pointer}
+  .marcar input{width:17px;height:17px;accent-color:var(--verde)}
+
+  .busca{position:relative;margin-bottom:22px}
+  .busca input{width:100%;border:1px solid var(--linha);background:var(--nevoa);border-radius:999px;padding:11px 18px 11px 42px;font-size:14px}
+  .busca input:focus{outline:none;border-color:var(--linha2);background:var(--branco)}
+  .busca svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--cinza)}
+
+  .vazio{border:1px dashed var(--linha);border-radius:var(--r2);padding:56px 24px;text-align:center}
+  .vazio p{color:var(--cinza);font-size:14px;margin-top:8px}
+
+  /* lista de pacientes */
+  .lista{display:flex;flex-direction:column}
+  .linha{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:var(--r);cursor:pointer;transition:background .2s var(--ease)}
+  .linha:hover{background:var(--nevoa)}
+  .ret{width:42px;height:42px;border-radius:999px;object-fit:cover;background:var(--nevoa);border:1px solid var(--linha);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;color:var(--cinza)}
+  .linha b{font-weight:600;font-size:14.5px}
+  .linha small{color:var(--cinza);font-size:12.5px}
+
+  /* ficha */
+  .abas{display:flex;gap:4px;border-bottom:1px solid var(--linha);margin-bottom:26px;overflow-x:auto}
+  .abas button{background:none;border:0;border-bottom:2px solid transparent;padding:11px 14px;font-size:14px;color:var(--cinza);cursor:pointer;white-space:nowrap;transition:color .2s var(--ease),border-color .2s var(--ease)}
+  .abas button.ativo{color:var(--verde);border-color:var(--verde);font-weight:600}
+
+  .perfil{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+  .perfil .ret{width:64px;height:64px;font-size:22px}
+
+  /* linha do tempo */
+  .tempo{position:relative;padding-left:26px}
+  .tempo::before{content:"";position:absolute;left:4px;top:8px;bottom:8px;width:1px;background:var(--linha)}
+  .evento{position:relative;padding-bottom:28px}
+  .evento::before{content:"";position:absolute;left:-26px;top:7px;width:9px;height:9px;border-radius:999px;background:var(--branco);border:1.5px solid var(--verde)}
+  .evento.futuro::before{border-color:var(--linha2)}
+  .data{font-size:12px;color:var(--cinza);font-variant-numeric:tabular-nums}
+  .evento h3{font-size:18px;margin:3px 0 6px}
+  .obs{font-size:13.5px;color:var(--grafite);white-space:pre-wrap}
+  .meta{font-size:13px;color:var(--cinza);margin-top:4px}
+  .miniaturas{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .miniaturas figure{width:96px}
+  .miniaturas img{width:96px;height:96px;object-fit:cover;border-radius:var(--r);border:1px solid var(--linha);cursor:zoom-in;transition:opacity .2s var(--ease)}
+  .miniaturas img:hover{opacity:.85}
+  .miniaturas figcaption{font-size:11px;color:var(--cinza);margin-top:5px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+
+  /* calendário */
+  .calTopo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px 6px}
+  .calTopo h2{font-size:23px}
+  .calTopo nav{display:flex;align-items:center;gap:2px}
+  .seta{border:0;background:none;cursor:pointer;color:var(--cinza);padding:6px 8px;border-radius:var(--r);line-height:0;transition:background .2s var(--ease),color .2s var(--ease)}
+  .seta:hover{background:var(--nevoa);color:var(--preto)}
+  .semana,.dias{display:grid;grid-template-columns:repeat(7,1fr)}
+  .semana span{padding:10px 0 6px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--cinza)}
+  .dia{display:flex;flex-direction:column;align-items:center;gap:5px;padding:3px 0 7px;border:0;background:none;font:inherit;cursor:pointer}
+  .dia:hover .n{background:var(--nevoa)}
+  .dia.fora .n{color:var(--linha2)}
+  .n{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;font-size:13.5px;font-variant-numeric:tabular-nums;transition:background .15s var(--ease),color .15s var(--ease)}
+  .dia.hoje .n{box-shadow:inset 0 0 0 1.5px var(--verde);color:var(--verde);font-weight:600}
+  .dia.sel .n{background:var(--preto);color:var(--branco);font-weight:600;box-shadow:none}
+  .dia.sel:hover .n{background:var(--preto)}
+  .dia.sel.hoje .n{background:var(--verde)}
+  .pontos{display:flex;gap:3px;height:5px;justify-content:center}
+  .rot{display:flex;align-items:center;gap:6px;color:var(--grafite)}
+  .rot b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--cinza)}
+  .pt{width:5px;height:5px;border-radius:999px;flex:none}
+  .pt.retorno{background:var(--verde)}
+  .pt.feito{box-shadow:inset 0 0 0 1.5px var(--linha2)}
+  .pt.atendimento{background:var(--cinza)}
+  @media(min-width:768px){.dia{padding:5px 0 9px}.n{width:36px;height:36px;font-size:14px}}
+
+  /* diálogos */
+  dialog{border:0;border-radius:var(--r2);padding:0;max-width:560px;width:calc(100% - 32px);background:var(--branco);box-shadow:0 24px 60px -20px rgba(12,12,11,.3)}
+  dialog::backdrop{background:rgba(12,12,11,.32);backdrop-filter:blur(3px)}
+  dialog[open]{animation:entra .28s var(--ease)}
+  @keyframes entra{from{opacity:0;transform:translateY(10px) scale(.99)}}
+  .corpo{padding:26px}
+  .topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--linha)}
+  #lupa{max-width:min(94vw,860px);width:auto}
+  #lupa img{display:block;max-width:min(94vw,860px);max-height:86vh;border-radius:var(--r2)}
+
+  /* login */
+  body:not(.entrou) .lateral,body:not(.entrou) .topoCel,body:not(.entrou) .rodape,body:not(.entrou) main{display:none}
+  #login{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:24px;background:var(--branco)}
+  body:not(.entrou):not(.carregando) #login{display:flex}
+  .cxLogin{width:100%;max-width:310px;animation:entra .4s var(--ease)}
+  .cxLogin .mono{height:52px;width:42px;margin:0 auto}
+  .cxLogin h1{font-size:26px;text-align:center;margin-top:16px}
+  .cxLogin .etiqueta{text-align:center;margin:5px 0 32px}
+  .cxLogin .btn{width:100%;margin-top:6px}
+  #erroLogin{color:#b42318;font-size:13px;text-align:center;margin-top:14px;min-height:18px}
+  .sair{display:flex;align-items:center;gap:9px;width:100%;border:0;background:none;cursor:pointer;padding:9px 12px;border-radius:var(--r);font-size:13px;color:var(--cinza);text-align:left;transition:background .2s var(--ease),color .2s var(--ease)}
+  .sair:hover{background:var(--nevoa);color:var(--preto)}
+
+  .aviso{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--preto);color:var(--branco);padding:10px 18px;border-radius:999px;font-size:13.5px;z-index:60;animation:sobe .28s var(--ease)}
+  @keyframes sobe{from{opacity:0;transform:translate(-50%,8px)}}
+  @media(min-width:1024px){.aviso{bottom:28px}}
+
+  .some{animation:apaga .2s var(--ease) forwards}
+  @keyframes apaga{to{opacity:0}}
+  main>.area{animation:fade .3s var(--ease)}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body class="carregando">
+
+<aside class="lateral">
+  <div>
+    <div class="marca">
+      <i class="mono"></i>
+      <b>Emylle Machado</b>
+      <div class="etiqueta" style="padding:0;margin-top:5px">Biomédica esteta</div>
+    </div>
+  </div>
+  <nav class="menu" id="menu"></nav>
+  <div class="nota" style="padding:0">
+    <button class="sair" id="sair">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10"/></svg>
+      Sair
+    </button>
+  </div>
+</aside>
+<header class="topoCel"><i class="mono"></i><span>Emylle Machado</span>
+  <button class="sair" id="sairCel" style="width:auto;margin-left:auto;padding:8px">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8M17 16l4-4-4-4M21 12H10"/></svg>
+  </button></header>
+<nav class="rodape" id="rodape"></nav>
+
+<main><div class="area" id="tela"></div></main>
+
+<div id="login">
+  <form class="cxLogin" id="frmLogin">
+    <i class="mono"></i>
+    <h1>Emylle Machado</h1>
+    <div class="etiqueta">Biomédica esteta</div>
+    <label class="campo"><span>Senha</span><input id="pwd" type="password" autocomplete="current-password" autofocus></label>
+    <button class="btn" type="submit" id="btnEntrar">Entrar</button>
+    <p id="erroLogin"></p>
+  </form>
+</div>
+
+<dialog id="modal"><div class="corpo" id="modalCorpo"></div></dialog>
+<dialog id="lupa"><img id="lupaImg" alt=""></dialog>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where }
+  from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js';
+
+/* Configuração do projeto emylle-biomedica no Firebase. */
+const firebaseConfig = {
+  apiKey: "AIzaSyBSJzR2_vzMA3zblKGDc6eP9L_J_a3TlqA",
+  authDomain: "emylle-biomedica.firebaseapp.com",
+  projectId: "emylle-biomedica",
+  storageBucket: "emylle-biomedica.firebasestorage.app",
+  messagingSenderId: "792091986358",
+  appId: "1:792091986358:web:33428f77bda5e15fa39917"
+};
+
+/* O Firebase exige um e-mail. Este aqui é fixo e interno: você nunca digita,
+   nunca vê, e ele não existe de verdade. A tela pede só a senha. */
+const ACESSO = 'emylle@clinica.local';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+/* Cache local: funciona sem internet e sincroniza quando ela volta. */
+const bd = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
+
+/* o mesmo desenho serve de ícone da aba e da tela inicial */
+const ICONE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAMAAAAKE/YAAAAAYFBMVEX39/b29/X29vX29fX19vT19fT09fP09PPy8vHw8e/v8O7r7OvY2te2urWxtrGmrKWgpqCbopuWnZaHj4eCi4KAiYB7hXt4gXdzfXNkb2RZZllYZFhXY1dWYlZVYlVVYVWN9jLnAAAHMUlEQVR42u1ciZaiOhANGSMoi+xLCOT///JVBbRRWeSdOSU9J3dmemTRvl4rtSWGMQsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwuLfxb8cr1M4D0e3ME45x+/GOfiTED6klZFWZZVVRYIfAj/iiI3KPLyxj7mzAS/ZhEB6WultQS0nda6a6V5rHqtVdsqONfK4HOlBQtVQkK6LW5xfBsQx3GSxOZBkqZ4ulYpCMjxo1+1i9HWShWTkJarH2iiZQAKIqNN0oLd+i4lIi08cT4LA1c8wRNB0xZikHp7GPqNVjSkVcTcOyP+SuPMUqUCdv6ENAitZEtCuuxC+HV8Ub2g0bn3yVgUILSUHclALPUaaZSvk3jHptIui7RsNM1AVOEw0JZGmN90le/wLdIgdN0XpUyovMei0g6PAhYpHcENp02Llk2QfZ806JylzK9V7W9ZNbqOPmN5R2EeFyR9XiItWNoGEObQqvmW0LoJWNHdSEirZaUh+0nljfmlBKlPG0LXfepwGqXHgbhoHqksOAvb/sbOG0J3IPQfGqUh91gZiEC6q13nWgGjNatG16Ez1+FlGx+BdF97mLxBTiG2XAf8R+Xy1kg7EMVrlwk3U8iJL2VKILTMTvAyNKQhmVwn3dYeXA+aZkxRVyzaZayQ8RFIo9Lo+oaPf9F1tJkQDueF+j5pzKeRNAepZbrkGF0WK8i6XQj1OY332CLdV5i4gtR6QWqO6V2XcWM8haIhvTEQB6UFpKhtNmvTHITuWhQarhIpvZ4wDaQFfzi1GQfiYNaBOsO1TH+f9AlJe3gVbKCSmTuj9Zh1mNqG54cgDTZtrkJCHTVNiKPtNf5A1pGdOBtI0+QetdyIiGYgmuFWt+XlTerRR4uhiqRKmNZIi3EgDm8gkpCiuq+NMAiGqXO39SMMxClp5vhlU/qnp1uhXL9NIjwncnlbpEebBpxZiFbNX4OhTDl3xsOiO4T3+CHN+dVUA2LSCBMsloPrGECWT4erpLvq0cpxQWooZIwpcH53HSC0eOh+hCLgZIqAh9LCy9Vd6tG7xNNEijt5fwjSekqaBQp82uPmEwR3qA4ebpCzvKepxtfM48l7mIQu10PhhaccwRI1tWgyP72a5b2SdjFFjYeQjVl20OjnhLWgaaqvZnkgZT8l/QdODN6Cj28JdZ88uWhpyq31wjYZE6ZH9yYAdzEEbawMepR9wpqmcllXmr2Yh9FeDnMDQDVuTb9MCHKbXiHNT6+kjR13pStQXxAdvTb3ODHpy0eVy0viBw7nzLEsqH14rudRe4/LatcU8ulJRBy9ddBA3mQKMGkmGT1nQlp9nzR/J40JNOZNHih+L1gY9UCs5Jb3cN8Tu6a44mRM/PY8KtJg0+dhdnPEs013U5c3RphIgtShrAP+2lOg8h7d8pwLf0qYnhpK5dWvbu/FOVXlokLhPU968onS7+aBVh21YFS+/25URKRrqPtmbPnhPXTlvs+J+hXYxtzL5UTllsqiJ4RheOHTXt77MBVYDaRczJEmGohtp7teG6i+61qIzXeaM8HFkBaXXIdzLoeqhdA2dV3VgKqqyjzPsyy5bJDGXCmZW3FDNlEkbxf/CvDh58VzIa346RI4j7bYu9HPuvaMZJrZr9/WezxJOOc9hl7pAmki7xEBAfETWqaz4K/59JPWc28lJyM9hPG3cHj3096OpVdUXdP3wvaHu7NoHgshlCqfxhlb/px8Hp/02iKVfeYB75Vodqv4jaRX1zDtJp33B2khfGzTZibAkl42j3XSaod50JFWG4XtvuBCRTpcbSGo3+inVbWLtPo6aaP0byONSrfVEc1jLbhgY3QX6eIApB0k7R1O6evGcqBYlt7vMw9Z/UrS7hHNY92m9ypNtEB2ayAe0OWtTn4elvSW0uUe0tkBbBoG4q4wzvJDkJ5r9a5FRKKuqdqoEY8YETcGYtJV+yqX75Pmu4oAfgyl+X2B7LGyvE3SeqfSydcHIt/Zy6Oz6ejvkeaW9P8kvTBR9P3gsknaO5732MinZ+bGj+DyfiXpNmTu3+ua0kwUYY14/nWk4df8LfPgRPOIXm4WXq6R3tPqpZmxNQnz4jfJ9g5EKtLh+LWrv1O50JgH82tdej/rTZ7nmjE1xa/2jcvSp0NufmkCzRcZXHbTGtJJXMTkIoQ4u/clTXAE5nER5vTr5g5zcGnCuODXqpepv3Q9lfWel6NpIeC3OivZ1GkSJwb3DUriYYMSuIZnYnM1vp8eb4vN39stisz5+BZVLYlNA2s/qaXuFO78gju+aHjcml1gVNfpVreyHbaFGc50nTKAO3s87ru+7/E5cNBLkpU1xqxZEKUlAvfXyfKiKItxs51iOG124Bm24imGTXjMz8zAHN1RRTSknfMZt5vxhi2NzB/Pu+9pdPF+djca9zzyZvA4eXEFs7CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLD4d/EfFb2cdUo7BfMAAAAASUVORK5CYII=";
+favicon.href = ICONE; favicon2.href = ICONE;
+
+/* ---------- ícones ---------- */
+const ICO = {
+  inicio:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  pacientes:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.5 5.5a3.2 3.2 0 0 1 0 5.6M18 20a6 6 0 0 0-2-4.4"/></svg>',
+  agenda:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  busca:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  mais:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  esq:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 6l-6 6 6 6"/></svg>',
+  dir:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6"/></svg>',
+  volta:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>'
+};
+
+/* ---------- banco ---------- */
+/* Tudo pendurado embaixo do usuário: usuarios/{uid}/pacientes, /atendimentos...
+   A regra no Firebase libera só o dono, então ninguém alcança o que é seu. */
+let UID = null;
+const col = n => collection(bd, 'usuarios', UID, n);
+const ref = (n, i) => doc(bd, 'usuarios', UID, n, i);
+/* a anamnese é uma por paciente, então a chave dela é o id da paciente */
+const chave = (n, r) => n === 'anamneses' ? r.pacienteId : r.id;
+
+const DB = {
+  async ler(n, i){ const s = await getDoc(ref(n, i)); return s.exists() ? s.data() : undefined; },
+  async todos(n){ return (await getDocs(col(n))).docs.map(d => d.data()); },
+  async por(n, campo, valor){ return (await getDocs(query(col(n), where(campo, '==', valor)))).docs.map(d => d.data()); },
+  async contar(n){ return (await getDocs(col(n))).size; },
+  async gravar(n, r){ await setDoc(ref(n, chave(n, r)), r); return r; },
+  async apagar(n, i){ await deleteDoc(ref(n, i)); }
+};
+
+const id = () => crypto.randomUUID();
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const hoje = () => iso(new Date());
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dataBR = d => d ? d.split('-').reverse().join('/') : '—';
+const moeda = c => (c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const iniciais = n => n.trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
+
+/* A foto vira texto para caber no Firestore. Original de celular passa de 5 MB;
+   comprimida fica em ~300 KB, dentro do limite de 1 MB por documento. */
+function comprimir(arquivo, largura = 1400, q = 0.82){
+  return new Promise(ok => {
+    const img = new Image();
+    img.onload = () => {
+      const e = Math.min(1, largura / img.width);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * e);
+      c.height = Math.round(img.height * e);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      ok(c.toDataURL('image/jpeg', q));
+    };
+    img.src = URL.createObjectURL(arquivo);
+  });
+}
+
+/* Duas versões: a miniatura fica junto do atendimento e é o que a linha do tempo
+   mostra; a grande só é baixada quando você clica pra ampliar. */
+async function duasVias(arquivo){
+  let img = await comprimir(arquivo, 1400);
+  if(img.length > 900000) img = await comprimir(arquivo, 1000, 0.7);  // teto de 1 MB do Firestore
+  return { img, thumb: await comprimir(arquivo, 240, 0.7) };
+}
+
+function aviso(txt){
+  document.querySelectorAll('.aviso').forEach(a => a.remove());
+  const d = document.createElement('div');
+  d.className = 'aviso'; d.textContent = txt; d.setAttribute('role','status');
+  document.body.append(d);
+  setTimeout(() => { d.classList.add('some'); setTimeout(() => d.remove(), 200); }, 2200);
+}
+
+/* ---------- diálogos ---------- */
+const modal = document.getElementById('modal');
+const modalCorpo = document.getElementById('modalCorpo');
+function abrirModal(html){ modalCorpo.innerHTML = html; modal.showModal(); }
+function fecharModal(){ modal.close(); }
+modal.addEventListener('click', e => { if(e.target === modal) fecharModal(); });
+
+const lupa = document.getElementById('lupa');
+lupa.addEventListener('click', () => lupa.close());
+function ampliar(src){ document.getElementById('lupaImg').src = src; lupa.showModal(); }
+
+async function confirmar(texto){
+  return new Promise(ok => {
+    abrirModal(`<h2>Confirmar</h2><p class="sub" style="margin-top:10px">${esc(texto)}</p>
+      <div class="acoes"><button class="btn claro" id="nao">Cancelar</button><button class="btn" id="sim">Excluir</button></div>`);
+    modalCorpo.querySelector('#nao').onclick = () => { fecharModal(); ok(false); };
+    modalCorpo.querySelector('#sim').onclick = () => { fecharModal(); ok(true); };
+  });
+}
+
+/* ---------- navegação ---------- */
+const abas = [
+  {rota:'#/', rotulo:'Início', ico:'inicio'},
+  {rota:'#/pacientes', rotulo:'Pacientes', ico:'pacientes'},
+  {rota:'#/agenda', rotulo:'Agenda', ico:'agenda'}
+];
+document.getElementById('menu').innerHTML = abas.map(a => `<a href="${a.rota}" data-r="${a.rota}">${ICO[a.ico]}${a.rotulo}</a>`).join('');
+document.getElementById('rodape').innerHTML = abas.map(a => `<a href="${a.rota}" data-r="${a.rota}">${ICO[a.ico]}${a.rotulo}</a>`).join('');
+
+function marcarAtivo(rota){
+  const base = rota.startsWith('#/paciente/') ? '#/pacientes' : rota;
+  document.querySelectorAll('[data-r]').forEach(a => a.classList.toggle('ativo', a.dataset.r === base));
+}
+
+const tela = document.getElementById('tela');
+
+async function rotear(){
+  if(!UID) return;
+  const rota = location.hash || '#/';
+  marcarAtivo(rota);
+  window.scrollTo(0,0);
+  if(rota.startsWith('#/paciente/')) return telaFicha(rota.split('/')[2]);
+  if(rota === '#/pacientes') return telaPacientes();
+  if(rota === '#/agenda') return telaAgenda();
+  return telaInicio();
+}
+addEventListener('hashchange', rotear);
+
+/* ---------- início ---------- */
+async function telaInicio(){
+  const [pac, ret, at] = await Promise.all([DB.contar('pacientes'), DB.todos('retornos'), DB.por('atendimentos','data',hoje())]);
+  const agendados = ret.filter(r => !r.concluido && r.data >= hoje()).length;
+  const data = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+
+  tela.innerHTML = `
+    <div class="cabecalho"><div><h1>Início</h1><p class="sub">${data}</p></div></div>
+    <div class="grade3">
+      ${[['Pacientes',pac],['Retornos agendados',agendados],['Atendimentos hoje',at.length]]
+        .map(([r,v]) => `<div class="cartao" style="padding:24px 22px"><div class="etiqueta">${r}</div><div class="num">${v}</div></div>`).join('')}
+    </div>`;
+}
+
+/* ---------- pacientes ---------- */
+async function telaPacientes(){
+  const todas = (await DB.todos('pacientes')).sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR'));
+
+  tela.innerHTML = `
+    <div class="cabecalho"><h1>Pacientes</h1>
+      <button class="btn" id="nova">${ICO.mais}Nova paciente</button></div>
+    <div class="busca">${ICO.busca}<input id="q" type="search" placeholder="Buscar pelo nome" autocomplete="off"></div>
+    <div id="resultado"></div>`;
+
+  const alvo = document.getElementById('resultado');
+  const pintar = termo => {
+    const t = termo.trim().toLowerCase();
+    const vis = t ? todas.filter(p => p.nome.toLowerCase().includes(t)) : todas;
+
+    if(!todas.length){
+      alvo.innerHTML = `<div class="vazio"><h2>Nenhuma paciente ainda</h2><p>Cadastre a primeira para começar.</p></div>`;
+      return;
+    }
+    if(!vis.length){
+      alvo.innerHTML = `<div class="vazio"><h2>Nada encontrado</h2><p>Nenhum nome contém “${esc(termo)}”.</p></div>`;
+      return;
+    }
+    alvo.innerHTML = `<div class="lista">${vis.map(p => `
+      <div class="linha" data-id="${p.id}">
+        ${p.foto ? `<img class="ret" src="${p.foto}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
+        <div><b>${esc(p.nome)}</b><br><small>${p.telefone ? esc(p.telefone) : 'Sem telefone'}</small></div>
+      </div>`).join('')}</div>`;
+    alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => location.hash = `#/paciente/${l.dataset.id}`);
+  };
+
+  pintar('');
+  document.getElementById('q').oninput = e => pintar(e.target.value);
+  document.getElementById('nova').onclick = () => formPaciente();
+}
+
+function formPaciente(p){
+  const novo = !p;
+  p = p || {id:id(), nome:'', cpf:'', nascimento:'', telefone:'', whatsapp:'', email:'', obs:'', foto:null, criadoEm:Date.now()};
+  let foto = p.foto;
+
+  abrirModal(`
+    <div class="topo"><h2>${novo ? 'Nova paciente' : 'Editar dados'}</h2></div>
+    <div class="perfil">
+      <div id="previa">${foto ? `<img class="ret" src="${foto}" alt="">` : `<div class="ret">—</div>`}</div>
+      <button class="btn claro" id="escolher">Escolher foto</button>
+      <input type="file" id="arquivo" accept="image/*" hidden>
+    </div>
+    <label class="campo"><span>Nome</span><input id="nome" value="${esc(p.nome)}" required></label>
+    <div class="dupla">
+      <label class="campo"><span>CPF</span><input id="cpf" inputmode="numeric" value="${esc(p.cpf)}"></label>
+      <label class="campo"><span>Data de nascimento</span><input id="nascimento" type="date" value="${esc(p.nascimento)}"></label>
+      <label class="campo"><span>Telefone</span><input id="telefone" inputmode="tel" value="${esc(p.telefone)}"></label>
+      <label class="campo"><span>WhatsApp</span><input id="whatsapp" inputmode="tel" value="${esc(p.whatsapp)}"></label>
+    </div>
+    <label class="campo"><span>E-mail</span><input id="email" type="email" value="${esc(p.email)}"></label>
+    <label class="campo"><span>Observações</span><textarea id="obs">${esc(p.obs)}</textarea></label>
+    <div class="acoes">
+      <button class="btn texto" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvar">Salvar</button>
+    </div>`);
+
+  const arquivo = modalCorpo.querySelector('#arquivo');
+  modalCorpo.querySelector('#escolher').onclick = () => arquivo.click();
+  arquivo.onchange = async () => {
+    if(!arquivo.files[0]) return;
+    foto = await comprimir(arquivo.files[0], 200, 0.75);
+    modalCorpo.querySelector('#previa').innerHTML = `<img class="ret" src="${foto}" alt="">`;
+  };
+  modalCorpo.querySelector('#cancelar').onclick = fecharModal;
+  modalCorpo.querySelector('#salvar').onclick = async () => {
+    const nome = modalCorpo.querySelector('#nome').value.trim();
+    if(!nome){ aviso('O nome é obrigatório.'); return; }
+    const reg = {...p, nome, foto,
+      cpf: modalCorpo.querySelector('#cpf').value.trim(),
+      nascimento: modalCorpo.querySelector('#nascimento').value,
+      telefone: modalCorpo.querySelector('#telefone').value.trim(),
+      whatsapp: modalCorpo.querySelector('#whatsapp').value.trim(),
+      email: modalCorpo.querySelector('#email').value.trim(),
+      obs: modalCorpo.querySelector('#obs').value.trim()};
+    await DB.gravar('pacientes', reg);
+    fecharModal();
+    aviso(novo ? 'Paciente cadastrada.' : 'Dados salvos.');
+    rotear();
+  };
+  setTimeout(() => modalCorpo.querySelector('#nome').focus(), 60);
+}
+
+/* ---------- ficha ---------- */
+let abaAtual = 'dados';
+
+async function telaFicha(pid){
+  const p = await DB.ler('pacientes', pid);
+  if(!p){ tela.innerHTML = `<div class="vazio"><h2>Paciente não encontrada</h2><p>Este registro não existe.</p></div>`; return; }
+
+  tela.innerHTML = `
+    <a href="#/pacientes" class="btn texto" style="margin-bottom:18px;padding-left:0">${ICO.volta}Pacientes</a>
+    <div class="perfil">
+      ${p.foto ? `<img class="ret" src="${p.foto}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
+      <div><h1 style="font-size:30px">${esc(p.nome)}</h1>
+        <p class="sub">${p.telefone ? esc(p.telefone) : 'Sem telefone'}</p></div>
+    </div>
+    <div class="abas">
+      <button data-a="dados">Dados</button>
+      <button data-a="anamnese">Anamnese</button>
+      <button data-a="historico">Histórico</button>
+    </div>
+    <div id="conteudo"></div>`;
+
+  const pintarAbas = () => tela.querySelectorAll('.abas button').forEach(b => b.classList.toggle('ativo', b.dataset.a === abaAtual));
+  tela.querySelectorAll('.abas button').forEach(b => b.onclick = () => { abaAtual = b.dataset.a; pintarAbas(); montar(); });
+
+  const montar = () => {
+    const alvo = document.getElementById('conteudo');
+    if(abaAtual === 'dados') return abaDados(alvo, p);
+    if(abaAtual === 'anamnese') return abaAnamnese(alvo, p);
+    return abaHistorico(alvo, p);
+  };
+  pintarAbas(); montar();
+}
+
+function abaDados(alvo, p){
+  const linhas = [['CPF',p.cpf],['Nascimento',dataBR(p.nascimento)],['Telefone',p.telefone],
+    ['WhatsApp',p.whatsapp],['E-mail',p.email],['Observações',p.obs]];
+  alvo.innerHTML = `
+    <div class="cartao" style="padding:8px 22px 18px">
+      ${linhas.map(([r,v]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--linha)">
+        <span class="etiqueta" style="flex:none">${r}</span>
+        <span style="text-align:right;font-size:14px;white-space:pre-wrap">${v ? esc(v) : '<span style="color:var(--linha2)">—</span>'}</span></div>`).join('')}
+    </div>
+    <div class="acoes" style="border:0">
+      <button class="btn texto perigo" id="excluir">Excluir paciente</button>
+      <button class="btn claro" id="editar">Editar dados</button>
+    </div>`;
+  alvo.querySelector('#editar').onclick = () => formPaciente(p);
+  alvo.querySelector('#excluir').onclick = async () => {
+    if(!await confirmar(`Excluir ${p.nome} e todo o histórico dela? Não tem como desfazer.`)) return;
+    for(const a of await DB.por('atendimentos','pacienteId',p.id)) await DB.apagar('atendimentos', a.id);
+    for(const f of await DB.por('fotos','pacienteId',p.id)) await DB.apagar('fotos', f.id);
+    for(const r of await DB.por('retornos','pacienteId',p.id)) await DB.apagar('retornos', r.id);
+    await DB.apagar('anamneses', p.id);
+    await DB.apagar('pacientes', p.id);
+    aviso('Paciente excluída.');
+    location.hash = '#/pacientes';
+  };
+}
+
+async function abaAnamnese(alvo, p){
+  const a = (await DB.ler('anamneses', p.id)) ||
+    {pacienteId:p.id, alergias:'', doencas:'', medicamentos:'', cirurgias:'', gestacao:false, queixa:'', objetivos:''};
+
+  const texto = [['alergias','Alergias'],['doencas','Doenças'],['medicamentos','Medicamentos'],
+    ['cirurgias','Cirurgias'],['queixa','Queixa principal'],['objetivos','Objetivos do tratamento']];
+
+  alvo.innerHTML = `
+    <div class="cartao" style="padding:24px 22px 8px">
+      ${texto.map(([k,r]) => `<label class="campo"><span>${r}</span><textarea data-k="${k}">${esc(a[k])}</textarea></label>`).join('')}
+      <label class="marcar"><input type="checkbox" data-k="gestacao" ${a.gestacao ? 'checked' : ''}>Gestante</label>
+    </div>
+    <p class="sub" style="text-align:right;margin-top:12px" id="estado">Salva sozinho enquanto você escreve.</p>`;
+
+  let timer;
+  const salvar = async () => {
+    alvo.querySelectorAll('[data-k]').forEach(c => a[c.dataset.k] = c.type === 'checkbox' ? c.checked : c.value);
+    a.atualizadoEm = Date.now();
+    await DB.gravar('anamneses', a);
+    alvo.querySelector('#estado').textContent = 'Salvo às ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  };
+  alvo.querySelectorAll('[data-k]').forEach(c => {
+    c.oninput = () => { clearTimeout(timer); timer = setTimeout(salvar, 600); };
+    if(c.type === 'checkbox') c.onchange = salvar;
+  });
+}
+
+async function abaHistorico(alvo, p){
+  const [ats, rets] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id)]);
+
+  const eventos = [
+    ...ats.map(a => ({tipo:'atendimento', data:a.data, dado:a})),
+    ...rets.map(r => ({tipo:'retorno', data:r.data, dado:r}))
+  ].sort((x,y) => y.data.localeCompare(x.data));
+
+  alvo.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap">
+      <button class="btn" id="novoAt">${ICO.mais}Novo atendimento</button>
+      <button class="btn claro" id="novoRet">Marcar retorno</button>
+    </div>
+    <div id="tempo"></div>`;
+
+  alvo.querySelector('#novoAt').onclick = () => formAtendimento(p);
+  alvo.querySelector('#novoRet').onclick = () => formRetorno(p);
+
+  const t = alvo.querySelector('#tempo');
+  if(!eventos.length){
+    t.innerHTML = `<div class="vazio"><h2>Sem histórico ainda</h2><p>Registre o primeiro atendimento desta paciente.</p></div>`;
+    return;
+  }
+
+  t.className = 'tempo';
+  t.innerHTML = eventos.map(e => {
+    if(e.tipo === 'retorno'){
+      const futuro = e.data >= hoje() && !e.dado.concluido;
+      return `<div class="evento ${futuro ? 'futuro' : ''}">
+        <div class="data">${dataBR(e.data)}</div>
+        <h3>Retorno${e.dado.hora ? ' · ' + e.dado.hora : ''}${e.dado.concluido ? ' · concluído' : futuro ? ' · marcado' : ''}</h3>
+        ${e.dado.obs ? `<div class="obs">${esc(e.dado.obs)}</div>` : ''}
+        <div style="margin-top:8px;display:flex;gap:4px">
+          ${!e.dado.concluido ? `<button class="btn texto" data-ok="${e.dado.id}">Marcar como feito</button>` : ''}
+          <button class="btn texto perigo" data-delr="${e.dado.id}">Excluir</button>
+        </div></div>`;
+    }
+    const a = e.dado;
+    const minhas = (a.fotos || []).slice().sort((x,y) => x.momento.localeCompare(y.momento));
+    return `<div class="evento">
+      <div class="data">${dataBR(a.data)}</div>
+      <h3>${esc(a.procedimento)}</h3>
+      <div class="meta">${[a.produto && esc(a.produto), a.quantidade && esc(a.quantidade), a.valorCentavos ? moeda(a.valorCentavos) : ''].filter(Boolean).join(' · ') || '—'}</div>
+      ${a.obs ? `<div class="obs" style="margin-top:8px">${esc(a.obs)}</div>` : ''}
+      ${minhas.length ? `<div class="miniaturas">${minhas.map(f => `
+        <figure><img src="${f.thumb}" alt="${f.momento}" data-zoom="${f.id}">
+        <figcaption>${f.momento}</figcaption></figure>`).join('')}</div>` : ''}
+      <div style="margin-top:10px"><button class="btn texto perigo" data-dela="${a.id}">Excluir</button></div>
+    </div>`;
+  }).join('');
+
+  t.querySelectorAll('[data-zoom]').forEach(i => i.onclick = async () => {
+    ampliar(i.src);                                   // mostra a miniatura na hora
+    const f = await DB.ler('fotos', i.dataset.zoom);  // e troca pela grande quando chega
+    if(f) document.getElementById('lupaImg').src = f.img;
+  });
+  t.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => {
+    const r = await DB.ler('retornos', b.dataset.ok);
+    await DB.gravar('retornos', {...r, concluido:true});
+    aviso('Retorno concluído.'); abaHistorico(alvo, p);
+  });
+  t.querySelectorAll('[data-delr]').forEach(b => b.onclick = async () => {
+    if(!await confirmar('Excluir este retorno?')) return;
+    await DB.apagar('retornos', b.dataset.delr);
+    aviso('Retorno excluído.'); abaHistorico(alvo, p);
+  });
+  t.querySelectorAll('[data-dela]').forEach(b => b.onclick = async () => {
+    if(!await confirmar('Excluir este atendimento e as fotos dele?')) return;
+    for(const f of await DB.por('fotos','atendimentoId',b.dataset.dela)) await DB.apagar('fotos', f.id);
+    await DB.apagar('atendimentos', b.dataset.dela);
+    aviso('Atendimento excluído.'); abaHistorico(alvo, p);
+  });
+}
+
+/* ---------- atendimento ---------- */
+function formAtendimento(p){
+  const novas = {antes:[], depois:[]};
+
+  abrirModal(`
+    <div class="topo"><h2>Novo atendimento</h2></div>
+    <div class="dupla">
+      <label class="campo"><span>Data</span><input id="data" type="date" value="${hoje()}"></label>
+      <label class="campo"><span>Procedimento</span><input id="procedimento" placeholder="Ex.: Botox"></label>
+      <label class="campo"><span>Produto utilizado</span><input id="produto"></label>
+      <label class="campo"><span>Quantidade</span><input id="quantidade" placeholder="Ex.: 50 U"></label>
+    </div>
+    <label class="campo"><span>Valor</span><input id="valor" inputmode="decimal" placeholder="0,00"></label>
+    <label class="campo"><span>Observações</span><textarea id="obs"></textarea></label>
+    <div class="dupla">
+      ${['antes','depois'].map(m => `
+        <div class="campo"><span>Fotos ${m}</span>
+          <button class="btn claro" data-add="${m}" style="width:100%">Adicionar foto</button>
+          <input type="file" data-in="${m}" accept="image/*" multiple hidden>
+          <div class="miniaturas" data-previa="${m}"></div>
+        </div>`).join('')}
+    </div>
+    <div class="acoes">
+      <button class="btn texto" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvar">Salvar atendimento</button>
+    </div>`);
+
+  ['antes','depois'].forEach(m => {
+    const entrada = modalCorpo.querySelector(`[data-in="${m}"]`);
+    modalCorpo.querySelector(`[data-add="${m}"]`).onclick = () => entrada.click();
+    entrada.onchange = async () => {
+      for(const f of entrada.files) novas[m].push(await duasVias(f));
+      modalCorpo.querySelector(`[data-previa="${m}"]`).innerHTML =
+        novas[m].map(v => `<figure><img src="${v.thumb}" alt=""></figure>`).join('');
+      entrada.value = '';
+    };
+  });
+
+  modalCorpo.querySelector('#cancelar').onclick = fecharModal;
+  modalCorpo.querySelector('#salvar').onclick = async () => {
+    const procedimento = modalCorpo.querySelector('#procedimento').value.trim();
+    if(!procedimento){ aviso('Informe o procedimento.'); return; }
+    const bruto = modalCorpo.querySelector('#valor').value.replace(/\./g,'').replace(',','.');
+    const at = {
+      id:id(), pacienteId:p.id,
+      data: modalCorpo.querySelector('#data').value || hoje(),
+      procedimento,
+      produto: modalCorpo.querySelector('#produto').value.trim(),
+      quantidade: modalCorpo.querySelector('#quantidade').value.trim(),
+      valorCentavos: Math.round((parseFloat(bruto) || 0) * 100),
+      obs: modalCorpo.querySelector('#obs').value.trim(),
+      fotos: [],
+      criadoEm: Date.now()
+    };
+    for(const m of ['antes','depois'])
+      for(const v of novas[m]){
+        const fid = id();
+        at.fotos.push({id: fid, momento: m, thumb: v.thumb});
+        await DB.gravar('fotos', {id: fid, atendimentoId: at.id, pacienteId: p.id, momento: m, img: v.img, criadoEm: Date.now()});
+      }
+    await DB.gravar('atendimentos', at);
+    fecharModal();
+    aviso('Atendimento salvo.');
+    telaFicha(p.id);
+  };
+}
+
+function formRetorno(p){
+  abrirModal(`
+    <div class="topo"><h2>Marcar retorno</h2></div>
+    <div class="dupla">
+      <label class="campo"><span>Data</span><input id="data" type="date" value="${hoje()}"></label>
+      <label class="campo"><span>Hora <span style="color:var(--cinza);font-weight:400">(opcional)</span></span><input id="hora" type="time"></label>
+    </div>
+    <label class="campo"><span>Observações</span><textarea id="obs"></textarea></label>
+    <div class="acoes">
+      <button class="btn texto" id="cancelar">Cancelar</button>
+      <button class="btn" id="salvar">Marcar</button>
+    </div>`);
+  modalCorpo.querySelector('#cancelar').onclick = fecharModal;
+  modalCorpo.querySelector('#salvar').onclick = async () => {
+    await DB.gravar('retornos', {
+      id:id(), pacienteId:p.id,
+      data: modalCorpo.querySelector('#data').value || hoje(),
+      hora: modalCorpo.querySelector('#hora').value,
+      obs: modalCorpo.querySelector('#obs').value.trim(),
+      concluido:false, criadoEm:Date.now()
+    });
+    fecharModal();
+    aviso('Retorno marcado.');
+    telaFicha(p.id);
+  };
+}
+
+/* ---------- agenda ---------- */
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+let mesRef = (() => { const d = new Date(); d.setDate(1); return d; })();
+let diaSel = hoje();
+
+async function telaAgenda(){
+  const [rets, ats, pacs] = await Promise.all([DB.todos('retornos'), DB.todos('atendimentos'), DB.todos('pacientes')]);
+  const nome = pid => (pacs.find(p => p.id === pid) || {}).nome || 'Paciente removida';
+
+  /* tudo que acontece num dia, junto e ordenado por hora */
+  const porDia = {};
+  const juntar = (d, e) => (porDia[d] = porDia[d] || []).push(e);
+  rets.forEach(r => juntar(r.data, {tipo: r.concluido ? 'feito' : 'retorno', hora: r.hora || '',
+    pid: r.pacienteId, titulo: 'Retorno' + (r.concluido ? ' · concluído' : ''), obs: r.obs}));
+  ats.forEach(a => juntar(a.data, {tipo: 'atendimento', hora: '', pid: a.pacienteId, titulo: a.procedimento, obs: a.obs}));
+  Object.values(porDia).forEach(l => l.sort((x, y) => (x.hora || '99').localeCompare(y.hora || '99')));
+
+  const atrasados = rets.filter(r => !r.concluido && r.data < hoje()).sort((a, b) => a.data.localeCompare(b.data));
+
+  tela.innerHTML = `
+    <div class="cabecalho"><div><h1>Agenda</h1><p class="sub">Retornos e atendimentos</p></div></div>
+    ${atrasados.length ? `<div class="cartao" style="padding:14px 18px;margin-bottom:18px;border-color:var(--verde)">
+      <div class="etiqueta" style="color:var(--verde)">${atrasados.length} retorno${atrasados.length > 1 ? 's' : ''} atrasado${atrasados.length > 1 ? 's' : ''}</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+        ${atrasados.map(r => `<button class="rot" style="background:none;border:0;cursor:pointer;text-align:left;font-size:13.5px" data-ir="${r.pacienteId}">
+          <b>${dataBR(r.data)}</b> ${esc(nome(r.pacienteId))}</button>`).join('')}
+      </div></div>` : ''}
+    <div>
+      <div class="calTopo">
+        <h2 id="mes"></h2>
+        <nav>
+          <button class="btn texto" id="hj" style="font-size:13px">Hoje</button>
+          <button class="seta" id="ant" aria-label="Mês anterior">${ICO.esq}</button>
+          <button class="seta" id="prox" aria-label="Próximo mês">${ICO.dir}</button>
+        </nav>
+      </div>
+      <div class="semana">${['dom','seg','ter','qua','qui','sex','sáb'].map(d => `<span>${d}</span>`).join('')}</div>
+      <div class="dias" id="dias"></div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;color:var(--cinza)">
+      ${[['retorno','Retorno marcado'],['feito','Retorno concluído'],['atendimento','Atendimento realizado']]
+        .map(([c, r]) => `<span style="display:flex;align-items:center;gap:6px"><span class="pt ${c}"></span>${r}</span>`).join('')}
+    </div>
+    <div id="doDia"></div>`;
+
+  tela.querySelectorAll('[data-ir]').forEach(b => b.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${b.dataset.ir}`; });
+  tela.querySelector('#ant').onclick = () => { mesRef.setMonth(mesRef.getMonth() - 1); pintar(); };
+  tela.querySelector('#prox').onclick = () => { mesRef.setMonth(mesRef.getMonth() + 1); pintar(); };
+  tela.querySelector('#hj').onclick = () => { mesRef = new Date(); mesRef.setDate(1); diaSel = hoje(); pintar(); };
+
+  function pintar(){
+    const m = MESES[mesRef.getMonth()];
+    tela.querySelector('#mes').textContent = `${m[0].toUpperCase()}${m.slice(1)} de ${mesRef.getFullYear()}`;
+
+    const dow = new Date(mesRef.getFullYear(), mesRef.getMonth(), 1).getDay();
+    const noMes = new Date(mesRef.getFullYear(), mesRef.getMonth() + 1, 0).getDate();
+    const total = Math.ceil((dow + noMes) / 7) * 7;
+    const inicio = new Date(mesRef.getFullYear(), mesRef.getMonth(), 1 - dow);
+
+    let html = '';
+    for(let i = 0; i < total; i++){
+      const d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+      const ds = iso(d);
+      const itens = porDia[ds] || [];
+      const classes = ['dia'];
+      if(d.getMonth() !== mesRef.getMonth()) classes.push('fora');
+      if(ds === hoje()) classes.push('hoje');
+      if(ds === diaSel) classes.push('sel');
+      html += `<button class="${classes.join(' ')}" data-d="${ds}">
+        <div class="n">${d.getDate()}</div>
+        <div class="pontos">${itens.slice(0, 4).map(i => `<span class="pt ${i.tipo}"></span>`).join('')}</div>
+      </button>`;
+    }
+    tela.querySelector('#dias').innerHTML = html;
+    tela.querySelectorAll('.dia').forEach(b => b.onclick = () => { diaSel = b.dataset.d; pintar(); });
+    pintarDia();
+  }
+
+  function pintarDia(){
+    const alvo = tela.querySelector('#doDia');
+    if(!diaSel){ alvo.innerHTML = ''; return; }
+    const itens = porDia[diaSel] || [];
+    alvo.innerHTML = `<div class="etiqueta" style="margin:28px 0 10px">${dataBR(diaSel)}</div>` + (
+      !itens.length
+        ? `<p class="sub" style="padding:4px 2px 8px">Nada marcado neste dia.</p>`
+        : `<div class="lista">${itens.map(i => `
+            <div class="linha" data-p="${i.pid}">
+              <div class="ret" style="font-size:11px;letter-spacing:.05em">${i.hora || '—'}</div>
+              <div><b>${esc(nome(i.pid))}</b><br><small>${esc(i.titulo)}${i.obs ? ' · ' + esc(i.obs) : ''}</small></div>
+            </div>`).join('')}</div>`);
+    alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${l.dataset.p}`; });
+  }
+
+  pintar();
+}
+
+/* ---------- entrar e sair ---------- */
+const erroLogin = document.getElementById('erroLogin');
+
+const RECADO = {
+  'auth/invalid-credential': 'Senha errada.',
+  'auth/wrong-password': 'Senha errada.',
+  'auth/user-not-found': 'O acesso ainda não foi criado no Firebase.',
+  'auth/invalid-email': 'O acesso ainda não foi criado no Firebase.',
+  'auth/too-many-requests': 'Muitas tentativas. Espere alguns minutos.',
+  'auth/network-request-failed': 'Sem internet. O primeiro acesso precisa de conexão.',
+  'auth/user-disabled': 'Este acesso foi desativado.'
+};
+
+document.getElementById('frmLogin').onsubmit = async e => {
+  e.preventDefault();
+  const btn = document.getElementById('btnEntrar');
+  const senha = document.getElementById('pwd').value;
+  if(!senha){ erroLogin.textContent = 'Digite a senha.'; return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; erroLogin.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, ACESSO, senha);
+  } catch (e) {
+    erroLogin.textContent = RECADO[e.code] || 'Não deu para entrar. Tente de novo.';
+  }
+  btn.disabled = false; btn.textContent = 'Entrar';
+};
+
+const sair = async () => {
+  if(!await confirmar('Sair do sistema? Os dados continuam salvos.')) return;
+  await signOut(auth);
+};
+document.getElementById('sair').onclick = sair;
+document.getElementById('sairCel').onclick = sair;
+
+/* O Firebase lembra a sessão: só pede senha de novo se você sair. */
+onAuthStateChanged(auth, u => {
+  document.body.classList.remove('carregando');
+  if(u){
+    UID = u.uid;
+    document.body.classList.add('entrou');
+    document.getElementById('pwd').value = '';
+    rotear();
+  } else {
+    UID = null;
+    document.body.classList.remove('entrou');
+    tela.innerHTML = '';
+  }
+});
+</script>
+</body>
+</html>
