@@ -259,6 +259,7 @@ favicon.href = ICONE; favicon2.href = ICONE;
 const ICO = {
   inicio:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   pacientes:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16.5 5.5a3.2 3.2 0 0 1 0 5.6M18 20a6 6 0 0 0-2-4.4"/></svg>',
+  fin:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2 2.6 5 3.5 5 1.6 5 3.5-2.2 3-5 3-5-1.1-5-3"/></svg>',
   agenda:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   busca:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
   mais:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
@@ -347,11 +348,21 @@ async function confirmar(texto){
   });
 }
 
+async function perguntar(titulo, texto, sim, nao){
+  return new Promise(ok => {
+    abrirModal(`<h2>${esc(titulo)}</h2><p class="sub" style="margin-top:10px">${esc(texto)}</p>
+      <div class="acoes"><button class="btn texto" id="nao">${esc(nao)}</button><button class="btn" id="sim">${esc(sim)}</button></div>`);
+    modalCorpo.querySelector('#nao').onclick = () => { fecharModal(); ok(false); };
+    modalCorpo.querySelector('#sim').onclick = () => { fecharModal(); ok(true); };
+  });
+}
+
 /* ---------- navegação ---------- */
 const abas = [
   {rota:'#/', rotulo:'Início', ico:'inicio'},
   {rota:'#/pacientes', rotulo:'Pacientes', ico:'pacientes'},
-  {rota:'#/agenda', rotulo:'Agenda', ico:'agenda'}
+  {rota:'#/agenda', rotulo:'Agenda', ico:'agenda'},
+  {rota:'#/financeiro', rotulo:'Financeiro', ico:'fin'}
 ];
 document.getElementById('menu').innerHTML = abas.map(a => `<a href="${a.rota}" data-r="${a.rota}">${ICO[a.ico]}${a.rotulo}</a>`).join('');
 document.getElementById('rodape').innerHTML = abas.map(a => `<a href="${a.rota}" data-r="${a.rota}">${ICO[a.ico]}${a.rotulo}</a>`).join('');
@@ -371,6 +382,7 @@ async function rotear(){
   if(rota.startsWith('#/paciente/')) return telaFicha(rota.split('/')[2]);
   if(rota === '#/pacientes') return telaPacientes();
   if(rota === '#/agenda') return telaAgenda();
+  if(rota === '#/financeiro') return telaFinanceiro();
   return telaInicio();
 }
 addEventListener('hashchange', rotear);
@@ -700,6 +712,15 @@ function formAtendimento(p){
     await DB.gravar('atendimentos', at);
     fecharModal();
     aviso('Atendimento salvo.');
+    if(at.valorCentavos > 0 &&
+       await perguntar('Registrar pagamento', 'Deseja registrar o pagamento deste procedimento no Financeiro?', 'Registrar', 'Agora não')){
+      formReceita({
+        id: id(), data: at.data, pacienteId: p.id, procedimento: at.procedimento,
+        valorCentavos: at.valorCentavos, forma: 'pix', status: 'recebido', obs: '',
+        atendimentoId: at.id, criadoEm: Date.now()
+      }, true, () => telaFicha(p.id));
+      return;
+    }
     telaFicha(p.id);
   };
 }
@@ -825,6 +846,230 @@ async function telaAgenda(){
   }
 
   pintar();
+}
+
+/* ---------- financeiro ---------- */
+const FORMAS = {pix:'Pix', cartao:'Cartão', dinheiro:'Dinheiro', transferencia:'Transferência'};
+const CATEGORIAS = ['Aluguel','Produtos','Fornecedores','Equipamentos','Marketing','Internet','Energia','Água','Impostos','Outros'];
+let mesFin = (() => { const d = new Date(); d.setDate(1); return d; })();
+let abaFin = 'receitas';
+
+const dinheiro = v => {
+  const bruto = String(v).replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.');
+  return Math.round((parseFloat(bruto) || 0) * 100);
+};
+const valorTexto = c => (c/100).toLocaleString('pt-BR',{minimumFractionDigits:2});
+
+async function telaFinanceiro(){
+  const [recs, desps, pacs, ats] = await Promise.all([
+    DB.todos('receitas'), DB.todos('despesas'), DB.todos('pacientes'), DB.todos('atendimentos')
+  ]);
+  const nome = pid => pid ? ((pacs.find(p => p.id === pid) || {}).nome || 'Paciente removida') : '—';
+  const mes = `${mesFin.getFullYear()}-${String(mesFin.getMonth()+1).padStart(2,'0')}`;
+  const noMes = l => l.filter(x => (x.data || '').startsWith(mes));
+
+  const rMes = noMes(recs), dMes = noMes(desps);
+  const soma = l => l.reduce((t,x) => t + (x.valorCentavos || 0), 0);
+  const faturamento = soma(rMes);
+  const recebido = soma(rMes.filter(r => r.status === 'recebido'));
+  const pendenteMes = faturamento - recebido;
+  const despesas = soma(dMes);
+  const lucro = recebido - despesas;
+  const nAts = noMes(ats).length;
+  const ticket = nAts ? Math.round(faturamento / nAts) : 0;
+
+  const pendentes = recs.filter(r => r.status === 'pendente').sort((a,b) => a.data.localeCompare(b.data));
+  const mn = MESES[mesFin.getMonth()];
+
+  tela.innerHTML = `
+    <div class="cabecalho">
+      <div><h1>Financeiro</h1><p class="sub" style="text-transform:capitalize">${mn} de ${mesFin.getFullYear()}</p></div>
+      <nav style="display:flex;align-items:center;gap:2px">
+        <button class="btn texto" id="hjFin" style="font-size:13px">Hoje</button>
+        <button class="seta" id="antFin">${ICO.esq}</button>
+        <button class="seta" id="proxFin">${ICO.dir}</button>
+      </nav>
+    </div>
+
+    <div class="grade3">
+      ${[['Faturamento do mês', moeda(faturamento)],
+         ['Recebido', moeda(recebido)],
+         ['A receber no mês', moeda(pendenteMes)],
+         ['Despesas do mês', moeda(despesas)],
+         ['Lucro do mês', moeda(lucro)],
+         ['Atendimentos · ticket médio', `${nAts} · ${moeda(ticket)}`]]
+        .map(([r,v]) => `<div class="cartao" style="padding:20px 22px"><div class="etiqueta">${r}</div>
+          <div class="num" style="font-size:28px;margin-top:8px">${v}</div></div>`).join('')}
+    </div>
+
+    ${pendentes.length ? `<div class="cartao" style="padding:16px 18px;margin-top:22px;border-color:var(--verde)">
+      <div class="etiqueta" style="color:var(--verde)">Valores em aberto</div>
+      <div class="lista" style="margin-top:6px">
+        ${pendentes.map(r => `<div class="linha" style="cursor:default">
+          <div class="ret" style="font-size:11px">${dataBR(r.data).slice(0,5)}</div>
+          <div style="flex:1"><b>${esc(nome(r.pacienteId))}</b><br><small>${esc(r.procedimento || 'Receita')} · ${moeda(r.valorCentavos)}</small></div>
+          <button class="btn claro" data-receber="${r.id}" style="padding:7px 14px;font-size:13px">Receber</button>
+        </div>`).join('')}
+      </div></div>` : ''}
+
+    <div class="abas" style="margin-top:30px">
+      <button data-f="receitas">Receitas do mês</button>
+      <button data-f="despesas">Despesas do mês</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn" id="novaRec">${ICO.mais}Nova receita</button>
+      <button class="btn claro" id="novaDesp">${ICO.mais}Nova despesa</button>
+    </div>
+    <div id="listaFin"></div>`;
+
+  tela.querySelector('#antFin').onclick = () => { mesFin.setMonth(mesFin.getMonth()-1); telaFinanceiro(); };
+  tela.querySelector('#proxFin').onclick = () => { mesFin.setMonth(mesFin.getMonth()+1); telaFinanceiro(); };
+  tela.querySelector('#hjFin').onclick = () => { mesFin = new Date(); mesFin.setDate(1); telaFinanceiro(); };
+  tela.querySelector('#novaRec').onclick = () => formReceita(null, false, telaFinanceiro);
+  tela.querySelector('#novaDesp').onclick = () => formDespesa(null, telaFinanceiro);
+
+  tela.querySelectorAll('[data-receber]').forEach(b => b.onclick = async () => {
+    const r = await DB.ler('receitas', b.dataset.receber);
+    await DB.gravar('receitas', {...r, status:'recebido'});
+    aviso('Recebido.'); telaFinanceiro();
+  });
+
+  const pintarAbasFin = () => tela.querySelectorAll('[data-f]').forEach(b => b.classList.toggle('ativo', b.dataset.f === abaFin));
+  tela.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { abaFin = b.dataset.f; pintarAbasFin(); pintarLista(); });
+
+  function pintarLista(){
+    const alvo = tela.querySelector('#listaFin');
+    if(abaFin === 'receitas'){
+      const l = rMes.slice().sort((a,b) => b.data.localeCompare(a.data));
+      alvo.innerHTML = !l.length
+        ? `<div class="vazio"><h2>Sem receitas neste mês</h2><p>Lance uma receita ou registre um atendimento com valor.</p></div>`
+        : `<div class="lista">${l.map(r => `<div class="linha" data-er="${r.id}">
+            <div class="ret" style="font-size:11px">${dataBR(r.data).slice(0,5)}</div>
+            <div style="flex:1"><b>${esc(nome(r.pacienteId))}</b><br>
+              <small>${esc(r.procedimento || 'Receita')} · ${FORMAS[r.forma] || ''}${r.status === 'pendente' ? ' · <b style="color:var(--verde)">pendente</b>' : ''}</small></div>
+            <b style="font-variant-numeric:tabular-nums">${moeda(r.valorCentavos)}</b>
+          </div>`).join('')}</div>`;
+      alvo.querySelectorAll('[data-er]').forEach(x => x.onclick = async () =>
+        formReceita(await DB.ler('receitas', x.dataset.er), false, telaFinanceiro));
+    } else {
+      const l = dMes.slice().sort((a,b) => b.data.localeCompare(a.data));
+      alvo.innerHTML = !l.length
+        ? `<div class="vazio"><h2>Sem despesas neste mês</h2><p>Lance a primeira despesa.</p></div>`
+        : `<div class="lista">${l.map(d => `<div class="linha" data-ed="${d.id}">
+            <div class="ret" style="font-size:11px">${dataBR(d.data).slice(0,5)}</div>
+            <div style="flex:1"><b>${esc(d.descricao)}</b><br><small>${esc(d.categoria)} · ${FORMAS[d.forma] || ''}</small></div>
+            <b style="font-variant-numeric:tabular-nums">− ${moeda(d.valorCentavos)}</b>
+          </div>`).join('')}</div>`;
+      alvo.querySelectorAll('[data-ed]').forEach(x => x.onclick = async () =>
+        formDespesa(await DB.ler('despesas', x.dataset.ed), telaFinanceiro));
+    }
+  }
+  pintarAbasFin(); pintarLista();
+}
+
+async function formReceita(r, doAtendimento, depois){
+  const novo = !r || doAtendimento;
+  r = r || {id:id(), data:hoje(), pacienteId:'', procedimento:'', valorCentavos:0, forma:'pix', status:'recebido', obs:'', criadoEm:Date.now()};
+  const pacs = (await DB.todos('pacientes')).sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR'));
+
+  abrirModal(`
+    <div class="topo"><h2>${novo ? 'Nova receita' : 'Editar receita'}</h2></div>
+    <div class="dupla">
+      <label class="campo"><span>Data</span><input id="rdata" type="date" value="${esc(r.data)}"></label>
+      <label class="campo"><span>Paciente</span><select id="rpac">
+        <option value="">—</option>
+        ${pacs.map(p => `<option value="${p.id}" ${p.id === r.pacienteId ? 'selected' : ''}>${esc(p.nome)}</option>`).join('')}
+      </select></label>
+      <label class="campo"><span>Procedimento</span><input id="rproc" value="${esc(r.procedimento)}"></label>
+      <label class="campo"><span>Valor</span><input id="rvalor" inputmode="decimal" value="${r.valorCentavos ? valorTexto(r.valorCentavos) : ''}" placeholder="0,00"></label>
+      <label class="campo"><span>Forma de pagamento</span><select id="rforma">
+        ${Object.entries(FORMAS).map(([k,v]) => `<option value="${k}" ${k === r.forma ? 'selected' : ''}>${v}</option>`).join('')}
+      </select></label>
+      <label class="campo"><span>Status</span><select id="rstatus">
+        <option value="recebido" ${r.status === 'recebido' ? 'selected' : ''}>Recebido</option>
+        <option value="pendente" ${r.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+      </select></label>
+    </div>
+    <label class="campo"><span>Observações</span><textarea id="robs">${esc(r.obs)}</textarea></label>
+    <div class="acoes">
+      ${!novo ? `<button class="btn texto perigo" id="rdel" style="margin-right:auto">Excluir</button>` : ''}
+      <button class="btn texto" id="rcanc">Cancelar</button>
+      <button class="btn" id="rsalvar">Salvar</button>
+    </div>`);
+
+  modalCorpo.querySelector('#rcanc').onclick = () => { fecharModal(); depois && depois(); };
+  const del = modalCorpo.querySelector('#rdel');
+  if(del) del.onclick = async () => {
+    if(!await confirmar('Excluir esta receita?')) return;
+    await DB.apagar('receitas', r.id);
+    aviso('Receita excluída.'); depois && depois();
+  };
+  modalCorpo.querySelector('#rsalvar').onclick = async () => {
+    const v = dinheiro(modalCorpo.querySelector('#rvalor').value);
+    if(!v){ aviso('Informe o valor.'); return; }
+    await DB.gravar('receitas', {...r,
+      data: modalCorpo.querySelector('#rdata').value || hoje(),
+      pacienteId: modalCorpo.querySelector('#rpac').value,
+      procedimento: modalCorpo.querySelector('#rproc').value.trim(),
+      valorCentavos: v,
+      forma: modalCorpo.querySelector('#rforma').value,
+      status: modalCorpo.querySelector('#rstatus').value,
+      obs: modalCorpo.querySelector('#robs').value.trim()});
+    fecharModal();
+    aviso('Receita salva.');
+    depois && depois();
+  };
+}
+
+async function formDespesa(d, depois){
+  const novo = !d;
+  d = d || {id:id(), data:hoje(), categoria:'Produtos', descricao:'', valorCentavos:0, forma:'pix', obs:'', criadoEm:Date.now()};
+
+  abrirModal(`
+    <div class="topo"><h2>${novo ? 'Nova despesa' : 'Editar despesa'}</h2></div>
+    <div class="dupla">
+      <label class="campo"><span>Data</span><input id="ddata" type="date" value="${esc(d.data)}"></label>
+      <label class="campo"><span>Categoria</span><select id="dcat">
+        ${CATEGORIAS.map(c => `<option ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
+      </select></label>
+    </div>
+    <label class="campo"><span>Descrição</span><input id="ddesc" value="${esc(d.descricao)}"></label>
+    <div class="dupla">
+      <label class="campo"><span>Valor</span><input id="dvalor" inputmode="decimal" value="${d.valorCentavos ? valorTexto(d.valorCentavos) : ''}" placeholder="0,00"></label>
+      <label class="campo"><span>Forma de pagamento</span><select id="dforma">
+        ${Object.entries(FORMAS).map(([k,v]) => `<option value="${k}" ${k === d.forma ? 'selected' : ''}>${v}</option>`).join('')}
+      </select></label>
+    </div>
+    <label class="campo"><span>Observações</span><textarea id="dobs">${esc(d.obs)}</textarea></label>
+    <div class="acoes">
+      ${!novo ? `<button class="btn texto perigo" id="ddel" style="margin-right:auto">Excluir</button>` : ''}
+      <button class="btn texto" id="dcanc">Cancelar</button>
+      <button class="btn" id="dsalvar">Salvar</button>
+    </div>`);
+
+  modalCorpo.querySelector('#dcanc').onclick = () => { fecharModal(); depois && depois(); };
+  const del = modalCorpo.querySelector('#ddel');
+  if(del) del.onclick = async () => {
+    if(!await confirmar('Excluir esta despesa?')) return;
+    await DB.apagar('despesas', d.id);
+    aviso('Despesa excluída.'); depois && depois();
+  };
+  modalCorpo.querySelector('#dsalvar').onclick = async () => {
+    const v = dinheiro(modalCorpo.querySelector('#dvalor').value);
+    const desc = modalCorpo.querySelector('#ddesc').value.trim();
+    if(!desc){ aviso('Informe a descrição.'); return; }
+    if(!v){ aviso('Informe o valor.'); return; }
+    await DB.gravar('despesas', {...d,
+      data: modalCorpo.querySelector('#ddata').value || hoje(),
+      categoria: modalCorpo.querySelector('#dcat').value,
+      descricao: desc,
+      valorCentavos: v,
+      forma: modalCorpo.querySelector('#dforma').value,
+      obs: modalCorpo.querySelector('#dobs').value.trim()});
+    fecharModal();
+    aviso('Despesa salva.');
+    depois && depois();
+  };
 }
 
 /* ---------- entrar e sair ---------- */
