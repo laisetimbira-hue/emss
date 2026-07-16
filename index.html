@@ -1092,6 +1092,71 @@ Fui informada sobre o funcionamento do HiPRO, seus benefícios, limitações, po
 Compreendo que os resultados variam de acordo com fatores individuais, como idade, grau de flacidez, hábitos de vida e resposta biológica de cada organismo.
 
 Autorizo a realização do procedimento conforme indicação e avaliação da profissional responsável.`
+  },
+  botox: {
+    nome: 'Ficha Toxina botulínica',
+    secoes: [
+      {t:'Queixa principal', campos:[
+        {k:'incomoda', tipo:'ta', r:'O que mais incomoda em seu rosto?'},
+        {k:'regiao', tipo:'tx', r:'Qual região deseja tratar?'},
+        {k:'jaFezToxina', tipo:'un', r:'Já realizou aplicação de toxina botulínica anteriormente?', ops:['Não','Sim']},
+        {k:'ultimaAplicacao', tipo:'tx', r:'Quando foi a última aplicação?'},
+        {k:'satisfeita', tipo:'un', r:'Ficou satisfeita com o resultado?', ops:['Sim','Não','Em parte']},
+        {k:'intercorrencia', tipo:'tx', r:'Houve alguma intercorrência? Qual?'}]},
+      {t:'Histórico de saúde', campos:[
+        {k:'condicoes', tipo:'ch', r:'Você possui ou já teve:', ops:['Hipertensão','Diabetes','Doenças cardíacas','Doença autoimune','Doença neurológica','Miastenia gravis','AVC','Epilepsia','Distúrbios de coagulação','Câncer','Problemas na tireoide','Fez alguma vacina recentemente','Ingere no mínimo 2 litros de água por dia']},
+        {k:'condicaoOutra', tipo:'tx', r:'Outra doença'}]},
+      {t:'Gestação e amamentação', campos:[
+        {k:'gravida', tipo:'un', r:'Está grávida?', ops:['Não','Sim']},
+        {k:'amamentando', tipo:'un', r:'Está amamentando?', ops:['Não','Sim']}]},
+      {t:'Medicamentos', campos:[
+        {k:'usaMed', tipo:'un', r:'Utiliza algum medicamento continuamente?', ops:['Não','Sim']},
+        {k:'quaisMed', tipo:'ta', r:'Quais?'},
+        {k:'medClasses', tipo:'ch', r:'Está utilizando:', ops:['Anticoagulantes','AAS','Anti-inflamatórios','Corticoides','Relaxantes musculares','Antibióticos aminoglicosídeos','Antidepressivos','Suplementos','Outros']}]},
+      {t:'Alergias', campos:[
+        {k:'alergias', tipo:'ch', r:'Possui alergia a:', ops:['Medicamentos','Látex','Alimentos','Cosméticos','Proteína do ovo','Outra']},
+        {k:'qualAlergia', tipo:'tx', r:'Qual?'}]},
+      {t:'Histórico estético', campos:[
+        {k:'jaFez', tipo:'ch', r:'Já realizou:', ops:['Toxina botulínica','Preenchimento com ácido hialurônico','Bioestimuladores','Fios de PDO','Laser','Ultrassom microfocado (HiPRO, Ultraformer etc.)','Peelings','Cirurgia facial','Outros procedimentos']},
+        {k:'ultimoProc', tipo:'tx', r:'Quando foi o último procedimento?'}]},
+      {t:'Avaliação funcional', campos:[
+        {k:'funcional', tipo:'ch', r:'Você percebe:', ops:['Dor de cabeça frequente','Enxaqueca','Ranger os dentes','Apertamento dentário','Dor cervical','Assimetria facial','Queda das sobrancelhas','Pálpebras caídas','Dificuldade para mastigar','Nenhuma das alternativas']}]},
+      {t:'Hábitos de vida', campos:[
+        {k:'fuma', tipo:'un', r:'Fuma?', ops:['Sim','Não']},
+        {k:'alcool', tipo:'un', r:'Consome bebida alcoólica?', ops:['Não','Socialmente','Frequentemente']},
+        {k:'atividade', tipo:'un', r:'Pratica atividade física?', ops:['Não','Sim']},
+        {k:'sono', tipo:'un', r:'Qualidade do sono', ops:['Boa','Regular','Ruim']},
+        {k:'estresse', tipo:'un', r:'Nível de estresse', ops:['Baixo','Moderado','Alto']}]},
+      {t:'Avaliação clínica', prof:true, campos:[
+        {k:'tipoPele', tipo:'tx', r:'Tipo de pele'},
+        {k:'fotoenvelhecimento', tipo:'tx', r:'Grau de fotoenvelhecimento'},
+        {k:'fFrontal', tipo:'tx', r:'Força muscular — Frontal'},
+        {k:'fGlabela', tipo:'tx', r:'Força muscular — Glabela'},
+        {k:'fOrbicular', tipo:'tx', r:'Força muscular — Orbicular'},
+        {k:'fCorrugador', tipo:'tx', r:'Força muscular — Corrugador'},
+        {k:'fProcero', tipo:'tx', r:'Força muscular — Prócero'},
+        {k:'fMasseter', tipo:'tx', r:'Força muscular — Masseter'},
+        {k:'sorrisoGengival', tipo:'un', r:'Sorriso gengival', ops:['Não','Sim']},
+        {k:'assimetrias', tipo:'ta', r:'Assimetrias observadas'},
+        {k:'linhasEstaticas', tipo:'tx', r:'Linhas estáticas'},
+        {k:'linhasDinamicas', tipo:'tx', r:'Linhas dinâmicas'},
+        {k:'ptose', tipo:'un', r:'Ptose palpebral', ops:['Não','Sim']},
+        {k:'unidades', tipo:'tx', r:'Quantidade estimada de unidades'},
+        {k:'marcaToxina', tipo:'tx', r:'Marca da toxina'},
+        {k:'diluicao', tipo:'tx', r:'Diluição utilizada'}]},
+      {t:'Contraindicações', campos:[
+        {k:'contra', tipo:'ch', r:'Apresenta alguma das situações abaixo?', ops:['Gravidez','Lactação','Infecção ativa na região','Doença neuromuscular','Hipersensibilidade conhecida à toxina','Uso recente de aminoglicosídeos']},
+        {k:'contraOutra', tipo:'tx', r:'Outra contraindicação'}]},
+      {t:'Expectativas da paciente', campos:[
+        {k:'expectativa', tipo:'ta', r:'O que espera alcançar com o tratamento?'},
+        {k:'resultado', tipo:'un', r:'Prefere um resultado:', ops:['Bem natural','Moderado','Mais marcado']},
+        {k:'referencia', tipo:'ta', r:'Existe alguma referência de resultado que goste?'}]}
+    ],
+    declaracao: `Declaro que todas as informações fornecidas são verdadeiras e completas.
+
+Fui informada sobre indicações, limitações, possíveis efeitos adversos, necessidade de retoque quando indicado e duração aproximada do efeito da toxina botulínica.
+
+Autorizo a realização do procedimento conforme avaliação profissional.`
   }
 };
 
