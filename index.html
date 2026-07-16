@@ -446,10 +446,10 @@ lupa.addEventListener('click', e => { if(!e.target.closest('#lupaAcoes') && e.ta
 document.getElementById('lupaFechar').onclick = () => lupa.close();
 function ampliar(src){ document.getElementById('lupaImg').src = src; lupa.showModal(); }
 
-async function confirmar(texto){
+async function confirmar(texto, rotulo = 'Excluir'){
   return new Promise(ok => {
     abrirModal(`<h2>Confirmar</h2><p class="sub" style="margin-top:10px">${esc(texto)}</p>
-      <div class="acoes"><button class="btn claro" id="nao">Cancelar</button><button class="btn" id="sim">Excluir</button></div>`);
+      <div class="acoes"><button class="btn claro" id="nao">Cancelar</button><button class="btn" id="sim">${esc(rotulo)}</button></div>`);
     modalCorpo.querySelector('#nao').onclick = () => { fecharModal(); ok(false); };
     modalCorpo.querySelector('#sim').onclick = () => { fecharModal(); ok(true); };
   });
@@ -2183,7 +2183,7 @@ document.getElementById('frmLogin').onsubmit = async e => {
 };
 
 const sair = async () => {
-  if(!await confirmar('Sair do sistema? Os dados continuam salvos.')) return;
+  if(!await confirmar('Sair do sistema? Os dados continuam salvos.', 'Sair')) return;
   await signOut(auth);
 };
 document.getElementById('sair').onclick = sair;
