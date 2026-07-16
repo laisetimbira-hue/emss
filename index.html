@@ -292,6 +292,13 @@ const hoje = () => iso(new Date());
 const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dataBR = d => d ? d.split('-').reverse().join('/') : '—';
 const moeda = c => (c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const idade = nasc => {
+  if(!nasc) return null;
+  const n = new Date(nasc + 'T12:00:00'), h2 = new Date();
+  let a = h2.getFullYear() - n.getFullYear();
+  if(h2.getMonth() < n.getMonth() || (h2.getMonth() === n.getMonth() && h2.getDate() < n.getDate())) a--;
+  return a >= 0 && a < 130 ? a : null;
+};
 const iniciais = n => n.trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
 
 /* A foto vira texto para caber no Firestore. Original de celular passa de 5 MB;
@@ -439,7 +446,7 @@ async function telaPacientes(){
 
 function formPaciente(p){
   const novo = !p;
-  p = p || {id:id(), nome:'', cpf:'', nascimento:'', telefone:'', whatsapp:'', email:'', obs:'', foto:null, criadoEm:Date.now()};
+  p = p || {id:id(), nome:'', cpf:'', nascimento:'', telefone:'', whatsapp:'', email:'', profissao:'', obs:'', foto:null, criadoEm:Date.now()};
   let foto = p.foto;
 
   abrirModal(`
@@ -452,9 +459,10 @@ function formPaciente(p){
     <label class="campo"><span>Nome</span><input id="nome" value="${esc(p.nome)}" required></label>
     <div class="dupla">
       <label class="campo"><span>CPF</span><input id="cpf" inputmode="numeric" value="${esc(p.cpf)}"></label>
-      <label class="campo"><span>Data de nascimento</span><input id="nascimento" type="date" value="${esc(p.nascimento)}"></label>
+      <label class="campo"><span>Data de nascimento <b id="idadeAviso" style="font-weight:600;color:var(--verde)"></b></span><input id="nascimento" type="date" value="${esc(p.nascimento)}"></label>
       <label class="campo"><span>Telefone</span><input id="telefone" inputmode="tel" value="${esc(p.telefone)}"></label>
       <label class="campo"><span>WhatsApp</span><input id="whatsapp" inputmode="tel" value="${esc(p.whatsapp)}"></label>
+      <label class="campo"><span>Profissão</span><input id="profissao" value="${esc(p.profissao || '')}"></label>
     </div>
     <label class="campo"><span>E-mail</span><input id="email" type="email" value="${esc(p.email)}"></label>
     <label class="campo"><span>Observações</span><textarea id="obs">${esc(p.obs)}</textarea></label>
@@ -462,6 +470,14 @@ function formPaciente(p){
       <button class="btn texto" id="cancelar">Cancelar</button>
       <button class="btn" id="salvar">Salvar</button>
     </div>`);
+
+  const nascCampo = modalCorpo.querySelector('#nascimento');
+  const idadeAviso = modalCorpo.querySelector('#idadeAviso');
+  const mostrarIdade = () => {
+    const a = idade(nascCampo.value);
+    idadeAviso.textContent = a === null ? '' : `· ${a} anos`;
+  };
+  nascCampo.oninput = mostrarIdade; mostrarIdade();
 
   const arquivo = modalCorpo.querySelector('#arquivo');
   modalCorpo.querySelector('#escolher').onclick = () => arquivo.click();
@@ -480,6 +496,7 @@ function formPaciente(p){
       telefone: modalCorpo.querySelector('#telefone').value.trim(),
       whatsapp: modalCorpo.querySelector('#whatsapp').value.trim(),
       email: modalCorpo.querySelector('#email').value.trim(),
+      profissao: modalCorpo.querySelector('#profissao').value.trim(),
       obs: modalCorpo.querySelector('#obs').value.trim()};
     await DB.gravar('pacientes', reg);
     fecharModal();
@@ -523,8 +540,9 @@ async function telaFicha(pid){
 }
 
 function abaDados(alvo, p){
-  const linhas = [['CPF',p.cpf],['Nascimento',dataBR(p.nascimento)],['Telefone',p.telefone],
-    ['WhatsApp',p.whatsapp],['E-mail',p.email],['Observações',p.obs]];
+  const a = idade(p.nascimento);
+  const linhas = [['CPF',p.cpf],['Nascimento', p.nascimento ? dataBR(p.nascimento) + (a === null ? '' : ` · ${a} anos`) : ''],
+    ['Telefone',p.telefone],['WhatsApp',p.whatsapp],['E-mail',p.email],['Profissão',p.profissao],['Observações',p.obs]];
   alvo.innerHTML = `
     <div class="cartao" style="padding:8px 22px 18px">
       ${linhas.map(([r,v]) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:13px 0;border-bottom:1px solid var(--linha)">
@@ -657,10 +675,14 @@ function formAtendimento(p){
     <div class="topo"><h2>Novo atendimento</h2></div>
     <div class="dupla">
       <label class="campo"><span>Data</span><input id="data" type="date" value="${hoje()}"></label>
-      <label class="campo"><span>Procedimento</span><input id="procedimento" placeholder="Ex.: Botox"></label>
+      <label class="campo"><span>Procedimento</span><select id="procSel">
+        ${PROCEDIMENTOS.map(x => `<option>${x}</option>`).join('')}
+        <option value="__outro">Outro…</option>
+      </select></label>
       <label class="campo"><span>Produto utilizado</span><input id="produto"></label>
       <label class="campo"><span>Quantidade</span><input id="quantidade" placeholder="Ex.: 50 U"></label>
     </div>
+    <label class="campo" id="procOutroCx" style="display:none"><span>Qual procedimento?</span><input id="procOutro"></label>
     <label class="campo"><span>Valor</span><input id="valor" inputmode="decimal" placeholder="0,00"></label>
     <label class="campo"><span>Observações</span><textarea id="obs"></textarea></label>
     <div class="dupla">
@@ -676,6 +698,13 @@ function formAtendimento(p){
       <button class="btn" id="salvar">Salvar atendimento</button>
     </div>`);
 
+  const procSel = modalCorpo.querySelector('#procSel');
+  const procOutroCx = modalCorpo.querySelector('#procOutroCx');
+  procSel.onchange = () => {
+    procOutroCx.style.display = procSel.value === '__outro' ? 'block' : 'none';
+    if(procSel.value === '__outro') modalCorpo.querySelector('#procOutro').focus();
+  };
+
   ['antes','depois'].forEach(m => {
     const entrada = modalCorpo.querySelector(`[data-in="${m}"]`);
     modalCorpo.querySelector(`[data-add="${m}"]`).onclick = () => entrada.click();
@@ -689,7 +718,9 @@ function formAtendimento(p){
 
   modalCorpo.querySelector('#cancelar').onclick = fecharModal;
   modalCorpo.querySelector('#salvar').onclick = async () => {
-    const procedimento = modalCorpo.querySelector('#procedimento').value.trim();
+    const procedimento = procSel.value === '__outro'
+      ? modalCorpo.querySelector('#procOutro').value.trim()
+      : procSel.value;
     if(!procedimento){ aviso('Informe o procedimento.'); return; }
     const bruto = modalCorpo.querySelector('#valor').value.replace(/\./g,'').replace(',','.');
     const at = {
@@ -849,6 +880,7 @@ async function telaAgenda(){
 }
 
 /* ---------- financeiro ---------- */
+const PROCEDIMENTOS = ['Hipro','Toxina botulínica','Bioestimulador','Depilação a laser'];
 const FORMAS = {pix:'Pix', cartao:'Cartão', dinheiro:'Dinheiro', transferencia:'Transferência'};
 const CATEGORIAS = ['Aluguel','Produtos','Fornecedores','Equipamentos','Marketing','Internet','Energia','Água','Impostos','Outros'];
 let mesFin = (() => { const d = new Date(); d.setDate(1); return d; })();
