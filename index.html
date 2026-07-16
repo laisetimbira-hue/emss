@@ -87,6 +87,7 @@
   .busca input:focus{outline:none;border-color:var(--linha2);background:var(--branco)}
   .busca svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--cinza)}
 
+  .selo{display:inline-block;background:var(--verde-fundo);color:var(--verde);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px;vertical-align:2px;margin-left:7px}
   .vazio{border:1px dashed var(--linha);border-radius:var(--r2);padding:56px 24px;text-align:center}
   .vazio p{color:var(--cinza);font-size:14px;margin-top:8px}
 
@@ -474,7 +475,9 @@ async function telaInicio(){
 
 /* ---------- pacientes ---------- */
 async function telaPacientes(){
-  const todas = (await DB.todos('pacientes')).sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR'));
+  const [lista, ats] = await Promise.all([DB.todos('pacientes'), DB.todos('atendimentos')]);
+  const jaAtendidas = new Set(ats.map(a => a.pacienteId));
+  const todas = lista.sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR'));
 
   tela.innerHTML = `
     <div class="cabecalho"><h1>Pacientes</h1>
@@ -498,7 +501,7 @@ async function telaPacientes(){
     alvo.innerHTML = `<div class="lista">${vis.map(p => `
       <div class="linha" data-id="${p.id}">
         ${p.foto ? `<img class="ret" src="${p.foto}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
-        <div><b>${esc(p.nome)}</b><br><small>${p.telefone ? esc(p.telefone) : 'Sem telefone'}</small></div>
+        <div><b>${esc(p.nome)}</b>${jaAtendidas.has(p.id) ? '' : '<span class="selo">1ª consulta</span>'}<br><small>${p.telefone ? esc(p.telefone) : 'Sem telefone'}</small></div>
       </div>`).join('')}</div>`;
     alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => location.hash = `#/paciente/${l.dataset.id}`);
   };
@@ -574,14 +577,14 @@ function formPaciente(p){
 let abaAtual = 'dados';
 
 async function telaFicha(pid){
-  const p = await DB.ler('pacientes', pid);
+  const [p, atsP] = await Promise.all([DB.ler('pacientes', pid), DB.por('atendimentos','pacienteId',pid)]);
   if(!p){ tela.innerHTML = `<div class="vazio"><h2>Paciente não encontrada</h2><p>Este registro não existe.</p></div>`; return; }
 
   tela.innerHTML = `
     <a href="#/pacientes" class="btn texto" style="margin-bottom:18px;padding-left:0">${ICO.volta}Pacientes</a>
     <div class="perfil">
       ${p.foto ? `<img class="ret" src="${p.foto}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
-      <div><h1 style="font-size:30px">${esc(p.nome)}</h1>
+      <div><h1 style="font-size:30px">${esc(p.nome)}${atsP.length ? '' : '<span class="selo">1ª consulta</span>'}</h1>
         <p class="sub">${p.telefone ? esc(p.telefone) : 'Sem telefone'}</p></div>
     </div>
     <div class="abas">
@@ -1032,6 +1035,7 @@ let diaSel = hoje();
 async function telaAgenda(){
   const [rets, ats, pacs] = await Promise.all([DB.todos('retornos'), DB.todos('atendimentos'), DB.todos('pacientes')]);
   const nome = pid => (pacs.find(p => p.id === pid) || {}).nome || 'Paciente removida';
+  const jaAtendidas = new Set(ats.map(a => a.pacienteId));
 
   /* tudo que acontece num dia, junto e ordenado por hora */
   const porDia = {};
@@ -1112,7 +1116,7 @@ async function telaAgenda(){
         : `<div class="lista">${itens.map(i => `
             <div class="linha" data-p="${i.pid}">
               <div class="ret" style="font-size:11px;letter-spacing:.05em">${i.hora || '—'}</div>
-              <div><b>${esc(nome(i.pid))}</b><br><small>${esc(i.titulo)}${i.obs ? ' · ' + esc(i.obs) : ''}</small></div>
+              <div><b>${esc(nome(i.pid))}</b>${jaAtendidas.has(i.pid) ? '' : '<span class="selo">1ª consulta</span>'}<br><small>${esc(i.titulo)}${i.obs ? ' · ' + esc(i.obs) : ''}</small></div>
             </div>`).join('')}</div>`);
     alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${l.dataset.p}`; });
   }
