@@ -198,6 +198,26 @@
   .alternar button.ativo{background:var(--branco);color:var(--preto);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
   #lupaAcoes{display:flex;justify-content:center;gap:8px;padding:12px;background:var(--branco)}
 
+  /* comparador antes/depois */
+  #comp{position:fixed;inset:0;z-index:75;display:none;flex-direction:column;background:var(--branco)}
+  #comp.aberto{display:flex}
+  .compPalco{flex:1;position:relative;overflow:hidden;background:#f2f2f0;touch-action:none;user-select:none;-webkit-user-select:none}
+  .compPalco img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+  #compDivisor{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.35)}
+  #compDivisor::after{content:"⇔";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:999px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--grafite)}
+  .compSelo{position:absolute;top:12px;background:rgba(12,12,11,.62);color:#fff;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:5px 12px;z-index:2}
+  .compLado{flex:1;display:flex;gap:2px}
+  .compLado>div{flex:1;position:relative;background:#f2f2f0;overflow:hidden}
+  .compLado img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  .selFoto{outline:3px solid var(--verde);outline-offset:2px;border-radius:var(--r)}
+
+  /* assinatura */
+  #assin{position:fixed;inset:0;z-index:75;display:none;flex-direction:column;background:var(--branco)}
+  #assin.aberto{display:flex}
+  .assinMeio{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
+  .assinPad{width:min(92vw,640px);height:min(38vw,240px);border:1.5px dashed var(--linha2);border-radius:var(--r2);background:var(--branco);touch-action:none}
+  .assinLinha{width:min(80vw,520px);border-top:1px solid var(--linha2);padding-top:8px;text-align:center;font-size:12.5px;color:var(--cinza)}
+
   .aviso{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--preto);color:var(--branco);padding:10px 18px;border-radius:999px;font-size:13.5px;z-index:60;animation:sobe .28s var(--ease)}
   @keyframes sobe{from{opacity:0;transform:translate(-50%,8px)}}
   @media(min-width:1024px){.aviso{bottom:28px}}
@@ -250,6 +270,31 @@
 <dialog id="lupa">
   <button id="lupaFechar" style="position:absolute;top:10px;right:10px;z-index:2;border:0;border-radius:999px;width:34px;height:34px;background:rgba(12,12,11,.55);color:#fff;font-size:17px;cursor:pointer;line-height:0">×</button>
   <img id="lupaImg" alt=""><div id="lupaAcoes"></div></dialog>
+
+<div id="comp">
+  <div class="edTopo">
+    <button class="btn texto" id="cpFechar">Fechar</button>
+    <div class="alternar">
+      <button id="cpSobre" class="ativo">Sobrepor</button>
+      <button id="cpLado">Lado a lado</button>
+    </div>
+    <button class="btn claro" id="cpTrocar">Trocar</button>
+  </div>
+  <div class="compPalco" id="cpPalco"></div>
+</div>
+
+<div id="assin">
+  <div class="edTopo">
+    <button class="btn texto" id="asCancelar">Cancelar</button>
+    <span class="etiqueta">Assinatura da paciente</span>
+    <button class="btn" id="asConcluir">Concluir</button>
+  </div>
+  <div class="assinMeio">
+    <canvas class="assinPad" id="asPad"></canvas>
+    <div class="assinLinha" id="asNome"></div>
+    <button class="btn claro" id="asLimpar">Limpar</button>
+  </div>
+</div>
 
 <div id="editor">
   <div class="edTopo">
@@ -340,6 +385,18 @@ const idade = nasc => {
   let a = h2.getFullYear() - n.getFullYear();
   if(h2.getMonth() < n.getMonth() || (h2.getMonth() === n.getMonth() && h2.getDate() < n.getDate())) a--;
   return a >= 0 && a < 130 ? a : null;
+};
+const zap = w => {
+  const d = String(w || '').replace(/\D/g, '');
+  if(!d) return null;
+  return 'https://wa.me/' + (d.length <= 11 ? '55' + d : d);
+};
+/* 'hoje', 'amanhã' ou a data — pro texto do lembrete soar natural */
+const quandoBR = ds => {
+  if(ds === hoje()) return 'hoje';
+  const a = new Date(); a.setDate(a.getDate() + 1);
+  if(ds === iso(a)) return 'amanhã';
+  return 'dia ' + dataBR(ds).slice(0,5);
 };
 const iniciais = n => n.trim().split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase();
 
@@ -445,11 +502,6 @@ async function telaInicio(){
 
   const md = hoje().slice(5);   // 'MM-DD' de hoje
   const aniversariantes = pacs.filter(p => p.nascimento && p.nascimento.slice(5) === md);
-  const zap = w => {
-    const d = String(w || '').replace(/\D/g, '');
-    if(!d) return null;
-    return 'https://wa.me/' + (d.length <= 11 ? '55' + d : d);
-  };
 
   tela.innerHTML = `
     <div class="cabecalho"><div><h1>Início</h1><p class="sub">${data}</p></div></div>
@@ -628,6 +680,7 @@ function abaDados(alvo, p){
     for(const a of await DB.por('atendimentos','pacienteId',p.id)) await DB.apagar('atendimentos', a.id);
     for(const f of await DB.por('fotos','pacienteId',p.id)) await DB.apagar('fotos', f.id);
     for(const r of await DB.por('retornos','pacienteId',p.id)) await DB.apagar('retornos', r.id);
+    for(const t2 of await DB.por('termos','pacienteId',p.id)) await DB.apagar('termos', t2.id);
     await DB.apagar('anamneses', p.id);
     await DB.apagar('pacientes', p.id);
     aviso('Paciente excluída.');
@@ -663,23 +716,26 @@ async function abaAnamnese(alvo, p){
 }
 
 async function abaHistorico(alvo, p){
-  const [ats, rets, ans] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id), DB.todos('anotacoes')]);
+  const [ats, rets, ans, termos] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id), DB.todos('anotacoes'), DB.por('termos','pacienteId',p.id)]);
   const anotadas = new Set(ans.filter(a => a.imagem).map(a => a.id));
 
   const eventos = [
     ...ats.map(a => ({tipo:'atendimento', data:a.data, dado:a})),
-    ...rets.map(r => ({tipo:'retorno', data:r.data, dado:r}))
+    ...rets.map(r => ({tipo:'retorno', data:r.data, dado:r})),
+    ...termos.map(t => ({tipo:'termo', data:t.data, dado:t}))
   ].sort((x,y) => y.data.localeCompare(x.data));
 
   alvo.innerHTML = `
     <div style="display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap">
       <button class="btn" id="novoAt">${ICO.mais}Novo atendimento</button>
       <button class="btn claro" id="novoRet">Marcar retorno</button>
+      <button class="btn claro" id="novoTermo">Termo</button>
     </div>
     <div id="tempo"></div>`;
 
   alvo.querySelector('#novoAt').onclick = () => formAtendimento(p);
   alvo.querySelector('#novoRet').onclick = () => formRetorno(p);
+  alvo.querySelector('#novoTermo').onclick = () => formTermo(p);
 
   const t = alvo.querySelector('#tempo');
   if(!eventos.length){
@@ -698,6 +754,17 @@ async function abaHistorico(alvo, p){
         <div style="margin-top:8px;display:flex;gap:4px">
           ${!e.dado.concluido ? `<button class="btn texto" data-ok="${e.dado.id}">Marcar como feito</button>` : ''}
           <button class="btn texto perigo" data-delr="${e.dado.id}">Excluir</button>
+        </div></div>`;
+    }
+    if(e.tipo === 'termo'){
+      const t2 = e.dado;
+      return `<div class="evento">
+        <div class="data">${dataBR(e.data)}</div>
+        <h3>Termo assinado</h3>
+        <div class="meta">${esc(t2.titulo)}</div>
+        <div style="margin-top:8px;display:flex;gap:4px">
+          <button class="btn texto" data-vt="${t2.id}">Ver termo</button>
+          <button class="btn texto perigo" data-delt="${t2.id}">Excluir</button>
         </div></div>`;
     }
     const a = e.dado;
@@ -719,6 +786,12 @@ async function abaHistorico(alvo, p){
     const r = await DB.ler('retornos', b.dataset.ok);
     await DB.gravar('retornos', {...r, concluido:true});
     aviso('Retorno concluído.'); abaHistorico(alvo, p);
+  });
+  t.querySelectorAll('[data-vt]').forEach(b => b.onclick = () => verTermo(b.dataset.vt, p));
+  t.querySelectorAll('[data-delt]').forEach(b => b.onclick = async () => {
+    if(!await confirmar('Excluir este termo assinado? Ele é um documento da paciente.')) return;
+    await DB.apagar('termos', b.dataset.delt);
+    aviso('Termo excluído.'); abaHistorico(alvo, p);
   });
   t.querySelectorAll('[data-delr]').forEach(b => b.onclick = async () => {
     if(!await confirmar('Excluir este retorno?')) return;
@@ -779,7 +852,11 @@ async function abaFotos(alvo, p){
   });
   fotos.sort((a,b) => (b.data || '').localeCompare(a.data || '') || b.criadoEm - a.criadoEm);
 
-  const botao = `<div style="margin-bottom:22px"><button class="btn" id="addFotos">${ICO.mais}Adicionar fotos</button></div>`;
+  const botao = `<div style="margin-bottom:22px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button class="btn" id="addFotos">${ICO.mais}Adicionar fotos</button>
+    ${fotos.length >= 2 ? `<button class="btn claro" id="cmpBtn">Comparar</button><span class="sub" id="cmpDica"></span>` : ''}
+  </div>`;
+  let selecao = null;
   if(!fotos.length){
     alvo.innerHTML = botao + `<div class="vazio"><h2>Sem fotos ainda</h2><p>Tire as fotos da avaliação aqui, ou registre um atendimento com fotos.</p></div>`;
     alvo.querySelector('#addFotos').onclick = () => formFotosAvulsas(p);
@@ -807,7 +884,30 @@ async function abaFotos(alvo, p){
   }).join('') + `<p class="sub">Toque numa foto e deslize para o lado para percorrer os ângulos com a paciente.</p>`;
 
   alvo.querySelector('#addFotos').onclick = () => formFotosAvulsas(p);
-  alvo.querySelectorAll('[data-apre]').forEach(img => img.onclick = () => {
+
+  const dica = alvo.querySelector('#cmpDica');
+  const cmpBtn = alvo.querySelector('#cmpBtn');
+  if(cmpBtn) cmpBtn.onclick = () => {
+    if(selecao){ selecao = null; cmpBtn.textContent = 'Comparar'; dica.textContent = '';
+      alvo.querySelectorAll('[data-apre]').forEach(i => i.classList.remove('selFoto')); return; }
+    selecao = [];
+    cmpBtn.textContent = 'Cancelar';
+    dica.textContent = 'Toque na foto de ANTES';
+  };
+
+  alvo.querySelectorAll('[data-apre]').forEach(img => img.onclick = async () => {
+    if(selecao){
+      if(selecao.includes(img.dataset.apre)) return;
+      selecao.push(img.dataset.apre);
+      img.classList.add('selFoto');
+      if(selecao.length === 1){ dica.textContent = 'Agora toque na foto de DEPOIS'; return; }
+      dica.textContent = 'Abrindo…';
+      const [fa, fb] = await Promise.all([DB.ler('fotos', selecao[0]), DB.ler('fotos', selecao[1])]);
+      selecao = null; cmpBtn.textContent = 'Comparar'; dica.textContent = '';
+      alvo.querySelectorAll('[data-apre]').forEach(i => i.classList.remove('selFoto'));
+      Comparador.abrir(fa.img, fb.img);
+      return;
+    }
     const i = sequencia.findIndex(f => f.id === img.dataset.apre);
     apresentar(sequencia, i, p);
   });
@@ -901,6 +1001,190 @@ async function apresentar(seq, indice, p){
   };
 
   pintar();
+}
+
+/* ---------- comparador antes/depois ---------- */
+const Comparador = (() => {
+  const el = document.getElementById('comp');
+  const palco = document.getElementById('cpPalco');
+  let A = null, B = null, modo = 'sobre', pct = 50;
+
+  function pintar(){
+    document.getElementById('cpSobre').classList.toggle('ativo', modo === 'sobre');
+    document.getElementById('cpLado').classList.toggle('ativo', modo === 'lado');
+    if(modo === 'lado'){
+      palco.className = 'compLado';
+      palco.innerHTML = `
+        <div><span class="compSelo" style="left:12px">Antes</span><img src="${A}" alt="Antes"></div>
+        <div><span class="compSelo" style="left:12px">Depois</span><img src="${B}" alt="Depois"></div>`;
+      return;
+    }
+    palco.className = 'compPalco';
+    palco.innerHTML = `
+      <img src="${B}" alt="Depois">
+      <img id="cpAntes" src="${A}" alt="Antes" style="clip-path:inset(0 ${100-pct}% 0 0)">
+      <span class="compSelo" style="left:12px">Antes</span>
+      <span class="compSelo" style="right:12px">Depois</span>
+      <div id="compDivisor" style="left:${pct}%"></div>`;
+  }
+
+  function arrastar(e){
+    if(modo !== 'sobre') return;
+    const r = palco.getBoundingClientRect();
+    pct = Math.min(98, Math.max(2, (e.clientX - r.left) / r.width * 100));
+    const antes = document.getElementById('cpAntes');
+    const div = document.getElementById('compDivisor');
+    if(antes) antes.style.clipPath = `inset(0 ${100-pct}% 0 0)`;
+    if(div) div.style.left = pct + '%';
+  }
+  let arrastando = false;
+  palco.addEventListener('pointerdown', e => { e.preventDefault(); palco.setPointerCapture(e.pointerId); arrastando = true; arrastar(e); });
+  palco.addEventListener('pointermove', e => { if(arrastando) arrastar(e); });
+  const fim = () => arrastando = false;
+  palco.addEventListener('pointerup', fim);
+  palco.addEventListener('pointercancel', fim);
+
+  document.getElementById('cpFechar').onclick = () => el.classList.remove('aberto');
+  document.getElementById('cpSobre').onclick = () => { modo = 'sobre'; pintar(); };
+  document.getElementById('cpLado').onclick = () => { modo = 'lado'; pintar(); };
+  document.getElementById('cpTrocar').onclick = () => { [A, B] = [B, A]; pintar(); };
+
+  return {
+    abrir(imgAntes, imgDepois){
+      A = imgAntes; B = imgDepois; modo = 'sobre'; pct = 50;
+      el.classList.add('aberto');
+      pintar();
+    }
+  };
+})();
+
+/* ---------- termos de consentimento ---------- */
+const TERMO_MODELO = (p) => `Eu, ${p.nome}${p.cpf ? ', CPF ' + p.cpf : ''}, declaro que fui devidamente informada sobre o procedimento [PROCEDIMENTO], incluindo seus objetivos, benefícios esperados, possíveis reações adversas, contraindicações e cuidados pós-procedimento.
+
+Declaro que respondi com veracidade à ficha de anamnese, sem omitir informações relevantes sobre minha saúde, alergias, medicamentos em uso ou procedimentos anteriores.
+
+Estou ciente de que os resultados podem variar de pessoa para pessoa e que nenhum resultado específico foi garantido.
+
+Tive a oportunidade de esclarecer todas as minhas dúvidas e AUTORIZO a realização do procedimento.`;
+
+/* Assinatura em tela: quadro branco, caneta/dedo/mouse, sem zoom. */
+const Assinatura = (() => {
+  const el = document.getElementById('assin');
+  const pad = document.getElementById('asPad');
+  const ctx = pad.getContext('2d');
+  let tem = false, aoConcluir = null, ultimo = null;
+
+  function preparar(){
+    const r = pad.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    pad.width = Math.round(r.width * dpr);
+    pad.height = Math.round(r.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, r.width, r.height);
+    ctx.strokeStyle = '#0c0c0b'; ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    tem = false;
+  }
+
+  const ponto = e => {
+    const r = pad.getBoundingClientRect();
+    return {x: e.clientX - r.left, y: e.clientY - r.top};
+  };
+
+  pad.addEventListener('pointerdown', e => {
+    e.preventDefault(); pad.setPointerCapture(e.pointerId);
+    ultimo = ponto(e);
+  });
+  pad.addEventListener('pointermove', e => {
+    if(!ultimo) return;
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    evs.forEach(ev => {
+      const p2 = ponto(ev);
+      ctx.beginPath(); ctx.moveTo(ultimo.x, ultimo.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+      ultimo = p2; tem = true;
+    });
+  });
+  const soltar = () => { ultimo = null; };
+  pad.addEventListener('pointerup', soltar);
+  pad.addEventListener('pointercancel', soltar);
+
+  document.getElementById('asLimpar').onclick = preparar;
+  document.getElementById('asCancelar').onclick = () => { el.classList.remove('aberto'); aoConcluir && aoConcluir(null); };
+  document.getElementById('asConcluir').onclick = () => {
+    if(!tem){ aviso('A paciente ainda não assinou.'); return; }
+    const img = pad.toDataURL('image/png');
+    el.classList.remove('aberto');
+    aoConcluir && aoConcluir(img);
+  };
+
+  return {
+    abrir(nomePaciente){
+      return new Promise(ok => {
+        aoConcluir = ok;
+        document.getElementById('asNome').textContent = nomePaciente;
+        el.classList.add('aberto');
+        requestAnimationFrame(preparar);
+      });
+    }
+  };
+})();
+
+async function sha256hex(txt){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+function formTermo(p){
+  abrirModal(`
+    <div class="topo"><h2>Termo de consentimento</h2></div>
+    <label class="campo"><span>Título</span><input id="ttitulo" value="Termo de consentimento"></label>
+    <label class="campo"><span>Texto <span style="font-weight:400;color:var(--cinza)">— troque [PROCEDIMENTO] pelo nome do procedimento</span></span>
+      <textarea id="ttexto" style="min-height:220px">${esc(TERMO_MODELO(p))}</textarea></label>
+    <label class="marcar"><input type="checkbox" id="timg" checked>Paciente autoriza uso das fotos antes/depois para documentação clínica</label>
+    <div class="acoes">
+      <button class="btn texto" id="tcanc">Cancelar</button>
+      <button class="btn" id="tassinar">Coletar assinatura</button>
+    </div>`);
+
+  modalCorpo.querySelector('#tcanc').onclick = fecharModal;
+  modalCorpo.querySelector('#tassinar').onclick = async () => {
+    const texto = modalCorpo.querySelector('#ttexto').value.trim();
+    const titulo = modalCorpo.querySelector('#ttitulo').value.trim() || 'Termo de consentimento';
+    const autorizaImagem = modalCorpo.querySelector('#timg').checked;
+    if(!texto){ aviso('O termo está vazio.'); return; }
+    if(texto.includes('[PROCEDIMENTO]') &&
+       !await perguntar('Atenção', 'O texto ainda contém [PROCEDIMENTO] sem substituir. Coletar a assinatura mesmo assim?', 'Continuar', 'Voltar')) {
+      formTermo(p); return;
+    }
+    fecharModal();
+    const assinatura = await Assinatura.abrir(p.nome);
+    if(!assinatura){ aviso('Assinatura cancelada.'); return; }
+    const assinadoEm = Date.now();
+    const t = {
+      id: id(), pacienteId: p.id, data: hoje(), titulo, texto, autorizaImagem,
+      assinatura, assinadoEm,
+      integridade: await sha256hex(texto + '|' + assinatura + '|' + assinadoEm)
+    };
+    await DB.gravar('termos', t);
+    aviso('Termo assinado e salvo.');
+    abaAtual = 'historico'; telaFicha(p.id);
+  };
+}
+
+async function verTermo(tid, p){
+  const t = await DB.ler('termos', tid);
+  if(!t) return;
+  const dt = new Date(t.assinadoEm);
+  abrirModal(`
+    <div class="topo"><h2>${esc(t.titulo)}</h2></div>
+    <div style="max-height:44vh;overflow:auto;border:1px solid var(--linha);border-radius:var(--r);padding:14px;font-size:13.5px;white-space:pre-wrap">${esc(t.texto)}</div>
+    <p class="sub" style="margin-top:12px">${t.autorizaImagem ? '✓ Autorizou' : '✗ Não autorizou'} o uso das fotos para documentação clínica.</p>
+    <div style="margin-top:12px;border:1px solid var(--linha);border-radius:var(--r);background:#fff;padding:6px">
+      <img src="${t.assinatura}" alt="Assinatura" style="display:block;width:100%;max-height:150px;object-fit:contain">
+    </div>
+    <p class="sub" style="margin-top:8px">Assinado em ${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · verificação ${t.integridade ? t.integridade.slice(0,12) : '—'}</p>
+    <div class="acoes"><button class="btn" id="tfechar">Fechar</button></div>`);
+  modalCorpo.querySelector('#tfechar').onclick = fecharModal;
 }
 
 /* ---------- atendimento ---------- */
@@ -1036,12 +1320,23 @@ async function telaAgenda(){
   const [rets, ats, pacs] = await Promise.all([DB.todos('retornos'), DB.todos('atendimentos'), DB.todos('pacientes')]);
   const nome = pid => (pacs.find(p => p.id === pid) || {}).nome || 'Paciente removida';
   const jaAtendidas = new Set(ats.map(a => a.pacienteId));
+  const lembrete = (pid, data, hora, atrasado) => {
+    const p = pacs.find(x => x.id === pid);
+    const w = p && zap(p.whatsapp || p.telefone);
+    if(!w) return '';
+    const nome1 = p.nome.split(' ')[0];
+    const txt = atrasado
+      ? `Oi ${nome1}! Seu retorno estava marcado para ${dataBR(data)} — vamos remarcar? 😊`
+      : `Oi ${nome1}! Lembrando seu retorno ${quandoBR(data)}${hora ? ' às ' + hora : ''} 😊`;
+    return `<a class="btn claro" href="${w}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener"
+      style="padding:7px 14px;font-size:13px;flex:none" onclick="event.stopPropagation()">Lembrar</a>`;
+  };
 
   /* tudo que acontece num dia, junto e ordenado por hora */
   const porDia = {};
   const juntar = (d, e) => (porDia[d] = porDia[d] || []).push(e);
   rets.forEach(r => juntar(r.data, {tipo: r.concluido ? 'feito' : 'retorno', hora: r.hora || '',
-    pid: r.pacienteId, titulo: 'Retorno' + (r.concluido ? ' · concluído' : ''), obs: r.obs}));
+    pid: r.pacienteId, titulo: 'Retorno' + (r.concluido ? ' · concluído' : ''), obs: r.obs, pendente: !r.concluido, dataR: r.data}));
   ats.forEach(a => juntar(a.data, {tipo: 'atendimento', hora: '', pid: a.pacienteId, titulo: a.procedimento, obs: a.obs}));
   Object.values(porDia).forEach(l => l.sort((x, y) => (x.hora || '99').localeCompare(y.hora || '99')));
 
@@ -1052,8 +1347,10 @@ async function telaAgenda(){
     ${atrasados.length ? `<div class="cartao" style="padding:14px 18px;margin-bottom:18px;border-color:var(--verde)">
       <div class="etiqueta" style="color:var(--verde)">${atrasados.length} retorno${atrasados.length > 1 ? 's' : ''} atrasado${atrasados.length > 1 ? 's' : ''}</div>
       <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
-        ${atrasados.map(r => `<button class="rot" style="background:none;border:0;cursor:pointer;text-align:left;font-size:13.5px" data-ir="${r.pacienteId}">
-          <b>${dataBR(r.data)}</b> ${esc(nome(r.pacienteId))}</button>`).join('')}
+        ${atrasados.map(r => `<div style="display:flex;align-items:center;gap:8px">
+          <button class="rot" style="background:none;border:0;cursor:pointer;text-align:left;font-size:13.5px;flex:1" data-ir="${r.pacienteId}">
+            <b>${dataBR(r.data)}</b> ${esc(nome(r.pacienteId))}</button>
+          ${lembrete(r.pacienteId, r.data, r.hora, true)}</div>`).join('')}
       </div></div>` : ''}
     <div>
       <div class="calTopo">
@@ -1116,7 +1413,8 @@ async function telaAgenda(){
         : `<div class="lista">${itens.map(i => `
             <div class="linha" data-p="${i.pid}">
               <div class="ret" style="font-size:11px;letter-spacing:.05em">${i.hora || '—'}</div>
-              <div><b>${esc(nome(i.pid))}</b>${jaAtendidas.has(i.pid) ? '' : '<span class="selo">1ª consulta</span>'}<br><small>${esc(i.titulo)}${i.obs ? ' · ' + esc(i.obs) : ''}</small></div>
+              <div style="flex:1"><b>${esc(nome(i.pid))}</b>${jaAtendidas.has(i.pid) ? '' : '<span class="selo">1ª consulta</span>'}<br><small>${esc(i.titulo)}${i.obs ? ' · ' + esc(i.obs) : ''}</small></div>
+              ${i.pendente ? lembrete(i.pid, i.dataR, i.hora, i.dataR < hoje()) : ''}
             </div>`).join('')}</div>`);
     alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${l.dataset.p}`; });
   }
