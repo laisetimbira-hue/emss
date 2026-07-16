@@ -30,8 +30,8 @@
 
   /* navegação */
   .lateral{position:fixed;inset:0 auto 0 0;width:236px;border-right:1px solid var(--linha);padding:32px 20px;display:none;flex-direction:column}
-  .marca{padding:0 12px}
-  .marca .mono{height:38px;width:31px}
+  .marca{padding:0 12px;text-align:center}
+  .marca .mono{height:38px;width:31px;margin:0 auto}
   .marca b{display:block;font-family:var(--serif);font-size:21px;font-weight:400;margin-top:12px;letter-spacing:.01em}
   .etiqueta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cinza)}
   .menu{margin-top:38px;display:flex;flex-direction:column;gap:2px}
@@ -493,6 +493,9 @@ async function rotear(){
   return telaInicio();
 }
 addEventListener('hashchange', rotear);
+
+/* Ao abrir o site, sempre começar no Início — o endereço pode ter guardado a última tela visitada. */
+if(location.hash && location.hash !== '#/') history.replaceState(null, '', location.pathname + location.search);
 
 /* ---------- início ---------- */
 async function telaInicio(){
