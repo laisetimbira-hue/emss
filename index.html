@@ -681,6 +681,7 @@ function abaDados(alvo, p){
     for(const f of await DB.por('fotos','pacienteId',p.id)) await DB.apagar('fotos', f.id);
     for(const r of await DB.por('retornos','pacienteId',p.id)) await DB.apagar('retornos', r.id);
     for(const t2 of await DB.por('termos','pacienteId',p.id)) await DB.apagar('termos', t2.id);
+    for(const f2 of await DB.por('fichas','pacienteId',p.id)) await DB.apagar('fichas', f2.id);
     await DB.apagar('anamneses', p.id);
     await DB.apagar('pacientes', p.id);
     aviso('Paciente excluída.');
@@ -700,7 +701,25 @@ async function abaAnamnese(alvo, p){
       ${texto.map(([k,r]) => `<label class="campo"><span>${r}</span><textarea data-k="${k}">${esc(a[k])}</textarea></label>`).join('')}
       <label class="marcar"><input type="checkbox" data-k="gestacao" ${a.gestacao ? 'checked' : ''}>Gestante</label>
     </div>
-    <p class="sub" style="text-align:right;margin-top:12px" id="estado">Salva sozinho enquanto você escreve.</p>`;
+    <p class="sub" style="text-align:right;margin-top:12px" id="estado">Salva sozinho enquanto você escreve.</p>
+    <div class="etiqueta" style="margin:26px 0 10px">Fichas por procedimento</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${Object.entries(FICHAS).map(([k, e2]) => `<button class="btn claro" data-nf="${k}">${ICO.mais}${e2.nome}</button>`).join('')}
+    </div>
+    <div id="listaFichas"></div>`;
+
+  const fichasP = (await DB.por('fichas','pacienteId',p.id)).sort((x,y) => y.data.localeCompare(x.data));
+  const lf = alvo.querySelector('#listaFichas');
+  lf.innerHTML = !fichasP.length ? '' : `<div class="lista">${fichasP.map(f => `
+    <div class="linha" data-af="${f.id}">
+      <div class="ret" style="font-size:11px">${dataBR(f.data).slice(0,5)}</div>
+      <div><b>${(FICHAS[f.tipo] || {}).nome || f.tipo}</b><br>
+        <small>${f.assinatura ? 'Assinada' : 'Sem assinatura'}</small></div>
+    </div>`).join('')}</div>`;
+  lf.querySelectorAll('[data-af]').forEach(l => l.onclick = async () =>
+    abrirFichaProc(p, await DB.ler('fichas', l.dataset.af)));
+  alvo.querySelectorAll('[data-nf]').forEach(b => b.onclick = () =>
+    abrirFichaProc(p, {id:id(), pacienteId:p.id, tipo:b.dataset.nf, data:hoje(), respostas:{}, criadoEm:Date.now()}));
 
   let timer;
   const salvar = async () => {
@@ -1001,6 +1020,167 @@ async function apresentar(seq, indice, p){
   };
 
   pintar();
+}
+
+/* ---------- fichas de anamnese por procedimento ---------- */
+/* Cada ficha é um esquema declarativo; a tela é montada a partir dele.
+   Tipos: ch = caixas (múltipla escolha), un = uma opção, tx = texto curto, ta = texto longo. */
+const FICHAS = {
+  hipro: {
+    nome: 'Ficha HIPRO',
+    secoes: [
+      {t:'Queixa principal', campos:[
+        {k:'incomoda', tipo:'ta', r:'O que mais incomoda em relação ao seu rosto ou corpo?'},
+        {k:'regioes', tipo:'ch', r:'Qual região deseja tratar?', ops:['Testa','Glabela','Região periocular','Bochechas','Bigode chinês','Linha da mandíbula','Papada','Pescoço','Colo','Abdômen','Flancos','Culote','Braços','Coxas','Glúteos']},
+        {k:'regiaoOutra', tipo:'tx', r:'Outra região'},
+        {k:'tempo', tipo:'tx', r:'Há quanto tempo percebe essa alteração?'}]},
+      {t:'Objetivo do tratamento', campos:[
+        {k:'objetivos', tipo:'ch', r:'Qual resultado deseja alcançar?', ops:['Melhorar a flacidez','Definir o contorno facial','Reduzir gordura localizada','Melhorar a firmeza da pele','Estimular colágeno','Rejuvenescer o rosto']},
+        {k:'objetivoOutro', tipo:'tx', r:'Outro objetivo'}]},
+      {t:'Histórico de saúde', campos:[
+        {k:'condicoes', tipo:'ch', r:'Possui ou já teve alguma das condições abaixo?', ops:['Hipertensão','Diabetes','Doença cardíaca','Doença renal','Doença hepática','Doença autoimune','Distúrbios de coagulação','Doença neurológica','Câncer','Tireoide','Epilepsia']},
+        {k:'condicaoOutra', tipo:'tx', r:'Outra condição'}]},
+      {t:'Gestação', campos:[
+        {k:'gestacao', tipo:'un', r:'Situação atual', ops:['Está grávida','Está amamentando','Não se aplica']}]},
+      {t:'Medicamentos', campos:[
+        {k:'usaMed', tipo:'un', r:'Utiliza medicamentos continuamente?', ops:['Não','Sim']},
+        {k:'quaisMed', tipo:'ta', r:'Quais?'},
+        {k:'medClasses', tipo:'ch', r:'Utiliza:', ops:['Corticoides','Anticoagulantes','Anti-inflamatórios','Isotretinoína','Outros']}]},
+      {t:'Histórico estético', campos:[
+        {k:'jaFez', tipo:'ch', r:'Já realizou algum procedimento?', ops:['Toxina botulínica','Preenchimento','Bioestimuladores de colágeno','Fios de PDO','Laser','Radiofrequência','Ultrassom microfocado','Endolaser','Peelings','Cirurgia plástica','Outro']},
+        {k:'ultimoProc', tipo:'tx', r:'Quando foi o último procedimento?'},
+        {k:'intercorrencia', tipo:'un', r:'Teve alguma intercorrência?', ops:['Não','Sim']},
+        {k:'qualInter', tipo:'tx', r:'Qual?'}]},
+      {t:'Implantes e dispositivos', campos:[
+        {k:'implantes', tipo:'ch', r:'Possui:', ops:['Marcapasso','Implantes metálicos na região a ser tratada','Próteses metálicas','Placas ou parafusos','Implantes dentários','Fios permanentes','Nenhum']},
+        {k:'implantesObs', tipo:'ta', r:'Observações'}]},
+      {t:'Avaliação da pele', campos:[
+        {k:'pele', tipo:'ch', r:'Apresenta:', ops:['Flacidez leve','Flacidez moderada','Flacidez intensa','Gordura localizada','Rugas','Sulcos','Perda de contorno facial','Celulite','Estrias','Cicatrizes','Fibrose','Outro']}]},
+      {t:'Hábitos de vida', campos:[
+        {k:'agua', tipo:'un', r:'Consome água diariamente?', ops:['Menos de 1 litro','1 a 2 litros','Mais de 2 litros']},
+        {k:'atividade', tipo:'un', r:'Pratica atividade física?', ops:['Não','Sim']},
+        {k:'vezesSemana', tipo:'tx', r:'Quantas vezes por semana?'},
+        {k:'alimentacao', tipo:'un', r:'Como considera sua alimentação?', ops:['Excelente','Boa','Regular','Ruim']},
+        {k:'fuma', tipo:'un', r:'Fuma?', ops:['Sim','Não']},
+        {k:'alcool', tipo:'un', r:'Consome bebida alcoólica?', ops:['Não','Socialmente','Frequentemente']}]},
+      {t:'Contraindicações', campos:[
+        {k:'contra', tipo:'ch', r:'Apresenta alguma das situações abaixo?', ops:['Gravidez','Lactação','Infecção ativa na região','Feridas abertas','Acne inflamatória intensa','Herpes ativa','Implantes metálicos na área tratada','Marcapasso','Neoplasia ativa','Doença autoimune descompensada','Alteração importante da sensibilidade']},
+        {k:'contraOutra', tipo:'tx', r:'Outra'}]},
+      {t:'Avaliação clínica', prof:true, campos:[
+        {k:'fototipo', tipo:'tx', r:'Fototipo de Fitzpatrick'},
+        {k:'qualidadePele', tipo:'un', r:'Qualidade da pele', ops:['Excelente','Boa','Regular','Ruim']},
+        {k:'espessura', tipo:'un', r:'Espessura da pele', ops:['Fina','Média','Espessa']},
+        {k:'grauFlacidez', tipo:'un', r:'Grau de flacidez', ops:['I','II','III','IV']},
+        {k:'gorduraLoc', tipo:'un', r:'Presença de gordura localizada', ops:['Sim','Não']},
+        {k:'qtdGordura', tipo:'un', r:'Quantidade', ops:['Pequena','Moderada','Grande']},
+        {k:'regioesAval', tipo:'ta', r:'Regiões avaliadas'}]},
+      {t:'Planejamento do protocolo', prof:true, campos:[
+        {k:'objetivoPrincipal', tipo:'tx', r:'Objetivo principal'},
+        {k:'regiaoTratada', tipo:'tx', r:'Região tratada'},
+        {k:'profundidades', tipo:'ch', r:'Profundidades planejadas', ops:['1,5 mm','3,0 mm','4,5 mm','6,0 mm','7,0 mm','8,0 mm','9,0 mm','10 mm','11 mm','12 mm','13 mm']},
+        {k:'disparos', tipo:'tx', r:'Número estimado de disparos'},
+        {k:'sessoes', tipo:'tx', r:'Número de sessões previstas'},
+        {k:'intervalo', tipo:'tx', r:'Intervalo entre sessões'},
+        {k:'orientacoes', tipo:'ta', r:'Orientações pós-procedimento'}]},
+      {t:'Expectativas da paciente', campos:[
+        {k:'expectativa', tipo:'ta', r:'O que espera alcançar com o tratamento?'}]}
+    ],
+    declaracao: `Declaro que todas as informações fornecidas nesta ficha são verdadeiras e completas.
+
+Fui informada sobre o funcionamento do HiPRO, seus benefícios, limitações, possíveis efeitos transitórios (vermelhidão, edema, sensibilidade e desconforto), tempo esperado para estímulo de colágeno e necessidade de acompanhamento conforme avaliação profissional.
+
+Compreendo que os resultados variam de acordo com fatores individuais, como idade, grau de flacidez, hábitos de vida e resposta biológica de cada organismo.
+
+Autorizo a realização do procedimento conforme indicação e avaliação da profissional responsável.`
+  }
+};
+
+/* Monta e gerencia uma ficha por procedimento. Respostas salvam sozinhas. */
+async function abrirFichaProc(p, fichaDoc){
+  const esq = FICHAS[fichaDoc.tipo];
+  const f = fichaDoc;
+  f.respostas = f.respostas || {};
+
+  const campoHTML = c => {
+    const v = f.respostas[c.k];
+    if(c.tipo === 'tx') return `<label class="campo"><span>${c.r}</span><input data-fk="${c.k}" value="${esc(v || '')}"></label>`;
+    if(c.tipo === 'ta') return `<label class="campo"><span>${c.r}</span><textarea data-fk="${c.k}">${esc(v || '')}</textarea></label>`;
+    if(c.tipo === 'un') return `<div class="campo"><span>${c.r}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px">
+        ${c.ops.map(o => `<button type="button" class="btn ${v === o ? '' : 'claro'}" data-fk="${c.k}" data-op="${esc(o)}" style="padding:7px 13px;font-size:13px">${o}</button>`).join('')}
+      </div></div>`;
+    // ch: várias caixas
+    const marc = new Set(v || []);
+    return `<div class="campo"><span>${c.r}</span>
+      ${c.ops.map(o => `<label class="marcar" style="margin:7px 0 0">
+        <input type="checkbox" data-fk="${c.k}" data-op="${esc(o)}" ${marc.has(o) ? 'checked' : ''}>${o}</label>`).join('')}
+    </div>`;
+  };
+
+  abrirModal(`
+    <div class="topo"><h2>${esq.nome}</h2><span class="sub">${dataBR(f.data)}</span></div>
+    <p class="sub" style="margin:-8px 0 16px">${esc(p.nome)}${p.nascimento ? ' · ' + (idade(p.nascimento) ?? '') + ' anos' : ''}${p.cpf ? ' · CPF ' + esc(p.cpf) : ''}</p>
+    <div style="max-height:56vh;overflow:auto;padding-right:4px">
+      ${esq.secoes.map((s, i) => `
+        <div class="etiqueta" style="margin:${i ? '22px' : '2px'} 0 10px">${i+1}. ${s.t}${s.prof ? ' · preenchimento da profissional' : ''}</div>
+        ${s.campos.map(campoHTML).join('')}`).join('')}
+      <div class="etiqueta" style="margin:22px 0 10px">Declaração da paciente</div>
+      <div style="border:1px solid var(--linha);border-radius:var(--r);padding:12px;font-size:13px;white-space:pre-wrap">${esc(esq.declaracao)}</div>
+      ${f.assinatura ? `<div style="margin-top:10px;border:1px solid var(--linha);border-radius:var(--r);background:#fff;padding:6px">
+        <img src="${f.assinatura}" style="display:block;width:100%;max-height:120px;object-fit:contain" alt="Assinatura">
+      </div><p class="sub" style="margin-top:6px">Assinada em ${new Date(f.assinadoEm).toLocaleDateString('pt-BR')} às ${new Date(f.assinadoEm).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>` : ''}
+    </div>
+    <div class="acoes">
+      <button class="btn texto perigo" id="fpDel" style="margin-right:auto">Excluir</button>
+      <span class="sub" id="fpEstado" style="align-self:center"></span>
+      ${f.assinatura ? '' : '<button class="btn claro" id="fpAssinar">Coletar assinatura</button>'}
+      <button class="btn" id="fpFechar">Fechar</button>
+    </div>`);
+
+  let timer;
+  const salvar = async () => {
+    f.atualizadoEm = Date.now();
+    await DB.gravar('fichas', f);
+    const e2 = modalCorpo.querySelector('#fpEstado');
+    if(e2) e2.textContent = 'Salvo às ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  };
+  const agendar = () => { clearTimeout(timer); timer = setTimeout(salvar, 600); };
+
+  modalCorpo.querySelectorAll('input[data-fk]:not([type=checkbox]), textarea[data-fk]').forEach(c => {
+    c.oninput = () => { f.respostas[c.dataset.fk] = c.value; agendar(); };
+  });
+  modalCorpo.querySelectorAll('input[type=checkbox][data-fk]').forEach(c => {
+    c.onchange = () => {
+      const s = new Set(f.respostas[c.dataset.fk] || []);
+      c.checked ? s.add(c.dataset.op) : s.delete(c.dataset.op);
+      f.respostas[c.dataset.fk] = [...s];
+      salvar();
+    };
+  });
+  modalCorpo.querySelectorAll('button[data-fk]').forEach(b => {
+    b.onclick = () => {
+      const k = b.dataset.fk;
+      f.respostas[k] = f.respostas[k] === b.dataset.op ? '' : b.dataset.op;
+      modalCorpo.querySelectorAll(`button[data-fk="${k}"]`).forEach(x =>
+        x.className = `btn ${f.respostas[k] === x.dataset.op ? '' : 'claro'}`);
+      salvar();
+    };
+  });
+
+  modalCorpo.querySelector('#fpFechar').onclick = async () => { clearTimeout(timer); await salvar(); fecharModal(); abaAtual = 'anamnese'; telaFicha(p.id); };
+  modalCorpo.querySelector('#fpDel').onclick = async () => {
+    if(!await confirmar(`Excluir esta ${esq.nome} de ${dataBR(f.data)}?`)) return;
+    await DB.apagar('fichas', f.id);
+    aviso('Ficha excluída.'); abaAtual = 'anamnese'; telaFicha(p.id);
+  };
+  const bAss = modalCorpo.querySelector('#fpAssinar');
+  if(bAss) bAss.onclick = async () => {
+    clearTimeout(timer); await salvar();
+    fecharModal();
+    const ass = await Assinatura.abrir(p.nome);
+    if(ass){ f.assinatura = ass; f.assinadoEm = Date.now(); await DB.gravar('fichas', f); aviso('Ficha assinada.'); }
+    abrirFichaProc(p, f);
+  };
 }
 
 /* ---------- comparador antes/depois ---------- */
