@@ -438,16 +438,38 @@ addEventListener('hashchange', rotear);
 
 /* ---------- início ---------- */
 async function telaInicio(){
-  const [pac, ret, at] = await Promise.all([DB.contar('pacientes'), DB.todos('retornos'), DB.por('atendimentos','data',hoje())]);
+  const [pacs, ret, at] = await Promise.all([DB.todos('pacientes'), DB.todos('retornos'), DB.por('atendimentos','data',hoje())]);
   const agendados = ret.filter(r => !r.concluido && r.data >= hoje()).length;
   const data = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
 
+  const md = hoje().slice(5);   // 'MM-DD' de hoje
+  const aniversariantes = pacs.filter(p => p.nascimento && p.nascimento.slice(5) === md);
+  const zap = w => {
+    const d = String(w || '').replace(/\D/g, '');
+    if(!d) return null;
+    return 'https://wa.me/' + (d.length <= 11 ? '55' + d : d);
+  };
+
   tela.innerHTML = `
     <div class="cabecalho"><div><h1>Início</h1><p class="sub">${data}</p></div></div>
+    ${aniversariantes.length ? `<div class="cartao" style="padding:16px 18px;margin-bottom:18px;border-color:var(--verde)">
+      <div class="etiqueta" style="color:var(--verde)">🎂 Aniversariante${aniversariantes.length > 1 ? 's' : ''} de hoje</div>
+      <div class="lista" style="margin-top:6px">
+        ${aniversariantes.map(p => {
+          const a = idade(p.nascimento);
+          const w = zap(p.whatsapp || p.telefone);
+          return `<div class="linha" data-pid="${p.id}">
+            <div class="ret">${esc(iniciais(p.nome))}</div>
+            <div style="flex:1"><b>${esc(p.nome)}</b><br><small>${a === null ? '' : `Fazendo ${a} anos hoje`}</small></div>
+            ${w ? `<a class="btn claro" href="${w}?text=${encodeURIComponent('Feliz aniversário, ' + p.nome.split(' ')[0] + '! 🎉')}" target="_blank" rel="noopener" style="padding:7px 14px;font-size:13px" onclick="event.stopPropagation()">Parabenizar</a>` : ''}
+          </div>`;
+        }).join('')}
+      </div></div>` : ''}
     <div class="grade3">
-      ${[['Pacientes',pac],['Retornos agendados',agendados],['Atendimentos hoje',at.length]]
+      ${[['Pacientes',pacs.length],['Retornos agendados',agendados],['Atendimentos hoje',at.length]]
         .map(([r,v]) => `<div class="cartao" style="padding:24px 22px"><div class="etiqueta">${r}</div><div class="num">${v}</div></div>`).join('')}
     </div>`;
+  tela.querySelectorAll('[data-pid]').forEach(l => l.onclick = () => location.hash = '#/paciente/' + l.dataset.pid);
 }
 
 /* ---------- pacientes ---------- */
