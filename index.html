@@ -693,19 +693,7 @@ function abaDados(alvo, p){
 }
 
 async function abaAnamnese(alvo, p){
-  const a = (await DB.ler('anamneses', p.id)) ||
-    {pacienteId:p.id, alergias:'', doencas:'', medicamentos:'', cirurgias:'', gestacao:false, queixa:'', objetivos:''};
-
-  const texto = [['alergias','Alergias'],['doencas','Doenças'],['medicamentos','Medicamentos'],
-    ['cirurgias','Cirurgias'],['queixa','Queixa principal'],['objetivos','Objetivos do tratamento']];
-
   alvo.innerHTML = `
-    <div class="cartao" style="padding:24px 22px 8px">
-      ${texto.map(([k,r]) => `<label class="campo"><span>${r}</span><textarea data-k="${k}">${esc(a[k])}</textarea></label>`).join('')}
-      <label class="marcar"><input type="checkbox" data-k="gestacao" ${a.gestacao ? 'checked' : ''}>Gestante</label>
-    </div>
-    <p class="sub" style="text-align:right;margin-top:12px" id="estado">Salva sozinho enquanto você escreve.</p>
-    <div class="etiqueta" style="margin:26px 0 10px">Fichas por procedimento</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       ${Object.entries(FICHAS).map(([k, e2]) => `<button class="btn claro" data-nf="${k}">${ICO.mais}${e2.nome}</button>`).join('')}
     </div>
@@ -713,7 +701,9 @@ async function abaAnamnese(alvo, p){
 
   const fichasP = (await DB.por('fichas','pacienteId',p.id)).sort((x,y) => y.data.localeCompare(x.data));
   const lf = alvo.querySelector('#listaFichas');
-  lf.innerHTML = !fichasP.length ? '' : `<div class="lista">${fichasP.map(f => `
+  lf.innerHTML = !fichasP.length
+    ? `<div class="vazio"><h2>Nenhuma ficha ainda</h2><p>Crie a ficha do procedimento que a paciente vai realizar.</p></div>`
+    : `<div class="lista">${fichasP.map(f => `
     <div class="linha" data-af="${f.id}">
       <div class="ret" style="font-size:11px">${dataBR(f.data).slice(0,5)}</div>
       <div><b>${(FICHAS[f.tipo] || {}).nome || f.tipo}</b><br>
@@ -723,18 +713,6 @@ async function abaAnamnese(alvo, p){
     abrirFichaProc(p, await DB.ler('fichas', l.dataset.af)));
   alvo.querySelectorAll('[data-nf]').forEach(b => b.onclick = () =>
     abrirFichaProc(p, {id:id(), pacienteId:p.id, tipo:b.dataset.nf, data:hoje(), respostas:{}, criadoEm:Date.now()}));
-
-  let timer;
-  const salvar = async () => {
-    alvo.querySelectorAll('[data-k]').forEach(c => a[c.dataset.k] = c.type === 'checkbox' ? c.checked : c.value);
-    a.atualizadoEm = Date.now();
-    await DB.gravar('anamneses', a);
-    alvo.querySelector('#estado').textContent = 'Salvo às ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  };
-  alvo.querySelectorAll('[data-k]').forEach(c => {
-    c.oninput = () => { clearTimeout(timer); timer = setTimeout(salvar, 600); };
-    if(c.type === 'checkbox') c.onchange = salvar;
-  });
 }
 
 async function abaHistorico(alvo, p){
