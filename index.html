@@ -159,7 +159,7 @@
   .topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
   .acoes{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;padding-top:18px;border-top:1px solid var(--linha)}
   #lupa{max-width:min(94vw,860px);width:auto}
-  #lupa img{display:block;max-width:min(94vw,860px);max-height:86vh;border-radius:var(--r2)}
+  #lupa img{display:block;max-width:min(94vw,860px);max-height:86vh;border-radius:var(--r2);touch-action:none;-webkit-user-drag:none;user-select:none}
 
   /* login */
   body:not(.entrou) .lateral,body:not(.entrou) .topoCel,body:not(.entrou) .rodape,body:not(.entrou) main{display:none}
@@ -722,7 +722,7 @@ async function abaAnamnese(alvo, p){
 }
 
 async function abaHistorico(alvo, p){
-  const [ats, rets, ans, termos] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id), DB.todos('anotacoes'), DB.por('termos','pacienteId',p.id)]);
+  const [ats, rets, ans, termos] = await Promise.all([DB.por('atendimentos','pacienteId',p.id), DB.por('retornos','pacienteId',p.id), DB.por('anotacoes','pacienteId',p.id), DB.por('termos','pacienteId',p.id)]);
   const anotadas = new Set(ans.filter(a => a.imagem).map(a => a.id));
 
   const eventos = [
@@ -835,7 +835,7 @@ async function abrirFoto(fid, previa, depois){
     acoes.querySelector('#lupaEditar').onclick = e => {
       e.stopPropagation();
       lupa.close();
-      Editor.abrir(f.img, fid, an ? an.tracos : [], depois);
+      Editor.abrir(f.img, fid, f.pacienteId, an ? an.tracos : [], depois);
     };
   };
   pintar();
@@ -844,7 +844,7 @@ async function abrirFoto(fid, previa, depois){
 /* ---------- aba Fotos: o rosto por ângulos + modo apresentação ---------- */
 async function abaFotos(alvo, p){
   const [fotos, ans, ats] = await Promise.all([
-    DB.por('fotos','pacienteId',p.id), DB.todos('anotacoes'), DB.por('atendimentos','pacienteId',p.id)
+    DB.por('fotos','pacienteId',p.id), DB.por('anotacoes','pacienteId',p.id), DB.por('atendimentos','pacienteId',p.id)
   ]);
   const anot = new Map(ans.filter(a => a.imagem).map(a => [a.id, a]));
   const dataDe = new Map(ats.map(a => [a.id, a.data]));
@@ -881,7 +881,7 @@ async function abaFotos(alvo, p){
     return `<div class="etiqueta" style="margin:4px 0 10px">${rotulo(a)}</div>
       <div class="miniaturas" style="margin:0 0 22px">
         ${doGrupo.map(f => `<figure>
-          <img src="${anot.has(f.id) ? anot.get(f.id).imagem : f.thumb}" data-apre="${f.id}" alt="">
+          <img src="${f.thumb}" data-apre="${f.id}" alt="">
           <figcaption>${f.data ? dataBR(f.data).slice(0,5) : ''} · ${f.momento}${anot.has(f.id) ? ' ·<b style="color:var(--verde)"> anotada</b>' : ''}</figcaption>
         </figure>`).join('')}
       </div>`;
@@ -966,12 +966,14 @@ async function apresentar(seq, indice, p){
   const imgEl = document.getElementById('lupaImg');
   lupa.showModal();
 
-  let i = indice, mostrando = 'auto', x0 = null;
+  let i = indice, mostrando = 'auto', x0 = null, versao = 0;
 
   async function pintar(){
+    const minha = ++versao;
     const f0 = seq[i];
     if(f0.thumb) imgEl.src = f0.thumb;
     const [f, an] = await Promise.all([DB.ler('fotos', f0.id), DB.ler('anotacoes', f0.id)]);
+    if(minha !== versao) return;   // o usuário já avançou; esta resposta ficou velha
     const tem = an && an.imagem;
     const vendoAnotada = tem && mostrando !== 'original';
     imgEl.src = vendoAnotada ? an.imagem : f.img;
@@ -991,7 +993,7 @@ async function apresentar(seq, indice, p){
     acoes.querySelectorAll('[data-v]').forEach(b => b.onclick = e => { e.stopPropagation(); mostrando = b.dataset.v; pintar(); });
     acoes.querySelector('#apEditar').onclick = e => {
       e.stopPropagation(); lupa.close();
-      Editor.abrir(f.img, f0.id, an ? an.tracos : [], () => { abaAtual = 'fotos'; telaFicha(p.id); });
+      Editor.abrir(f.img, f0.id, f.pacienteId, an ? an.tracos : [], () => { abaAtual = 'fotos'; telaFicha(p.id); });
     };
   }
 
@@ -1891,7 +1893,7 @@ const Editor = (() => {
   const CORES = ['#0c0c0b','#c0392b','#546054','#1d5fbf','#e6a817','#ffffff'];
   const ESPESSURAS = [3, 6, 12];
 
-  let img = null, fotoId = null, aoConcluir = null;
+  let img = null, fotoId = null, pacId = null, aoConcluir = null;
   let tracos = [], refazerPilha = [];
   let ferramenta = 'caneta', cor = CORES[1], esp = 1, soCaneta = false;
   let vista = {x:0, y:0, k:1};
@@ -2093,10 +2095,10 @@ const Editor = (() => {
     aplicarVista();
   }
 
-  async function abrir(imagem, idFoto, tracosSalvos, depois){
+  async function abrir(imagem, idFoto, pacienteId, tracosSalvos, depois){
     img = new Image();
     await new Promise(ok => { img.onload = ok; img.src = imagem; });
-    fotoId = idFoto; aoConcluir = depois;
+    fotoId = idFoto; pacId = pacienteId; aoConcluir = depois;
     tracos = (tracosSalvos || []).map(t => ({...t, pts: t.pts.map(p => ({...p}))}));
     refazerPilha = []; desenhando = null; toques.clear(); pinca = null;
     ferramenta = 'caneta';
@@ -2123,6 +2125,7 @@ const Editor = (() => {
 
     await DB.gravar('anotacoes', {
       id: fotoId,
+      pacienteId: pacId,
       tracos: tracos.map(t => ({cor:t.cor, larg:t.larg, marca:!!t.marca,
         pts: t.pts.map(p => ({x:Math.round(p.x), y:Math.round(p.y), p:Math.round((p.p||1)*100)/100}))})),
       imagem: tracos.length ? saida : null,
