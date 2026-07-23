@@ -105,6 +105,8 @@
   .abas button.ativo{color:var(--verde);border-color:var(--verde);font-weight:600}
 
   .perfil{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+  .soLargo{display:none}
+  @media(min-width:560px){.soLargo{display:inline}}
   .perfil .ret{width:64px;height:64px;font-size:22px}
 
   /* linha do tempo */
@@ -439,7 +441,9 @@ const modal = document.getElementById('modal');
 const modalCorpo = document.getElementById('modalCorpo');
 function abrirModal(html){ modalCorpo.innerHTML = html; modal.showModal(); }
 function fecharModal(){ modal.close(); }
-modal.addEventListener('click', e => { if(e.target === modal) fecharModal(); });
+/* Toque fora NÃO fecha mais o formulário — fechava e jogava fora tudo que
+   estava preenchido. Agora só fecha pelos botões. */
+modal.addEventListener('cancel', e => e.preventDefault());
 
 const lupa = document.getElementById('lupa');
 lupa.addEventListener('click', e => { if(!e.target.closest('#lupaAcoes') && e.target !== document.getElementById('lupaImg')) lupa.close(); });
@@ -639,8 +643,9 @@ async function telaFicha(pid){
     <a href="#/pacientes" class="btn texto" style="margin-bottom:18px;padding-left:0">${ICO.volta}Pacientes</a>
     <div class="perfil">
       ${p.foto ? `<img class="ret" src="${p.foto}" alt="">` : `<div class="ret">${esc(iniciais(p.nome))}</div>`}
-      <div><h1 style="font-size:30px">${esc(p.nome)}${atsP.length ? '' : '<span class="selo">1ª consulta</span>'}</h1>
+      <div style="flex:1;min-width:0"><h1 style="font-size:30px">${esc(p.nome)}${atsP.length ? '' : '<span class="selo">1ª consulta</span>'}</h1>
         <p class="sub">${p.telefone ? esc(p.telefone) : 'Sem telefone'}</p></div>
+      <button class="btn" id="atNovo" style="flex:none">${ICO.mais}<span class="soLargo">Novo atendimento</span></button>
     </div>
     <div class="abas">
       <button data-a="dados">Dados</button>
@@ -650,6 +655,7 @@ async function telaFicha(pid){
     </div>
     <div id="conteudo"></div>`;
 
+  tela.querySelector('#atNovo').onclick = () => formAtendimento(p);
   const pintarAbas = () => tela.querySelectorAll('.abas button').forEach(b => b.classList.toggle('ativo', b.dataset.a === abaAtual));
   tela.querySelectorAll('.abas button').forEach(b => b.onclick = () => { abaAtual = b.dataset.a; pintarAbas(); montar(); });
 
@@ -727,13 +733,11 @@ async function abaHistorico(alvo, p){
 
   alvo.innerHTML = `
     <div style="display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap">
-      <button class="btn" id="novoAt">${ICO.mais}Novo atendimento</button>
       <button class="btn claro" id="novoRet">Marcar retorno</button>
       <button class="btn claro" id="novoTermo">Termo</button>
     </div>
     <div id="tempo"></div>`;
 
-  alvo.querySelector('#novoAt').onclick = () => formAtendimento(p);
   alvo.querySelector('#novoRet').onclick = () => formRetorno(p);
   alvo.querySelector('#novoTermo').onclick = () => formTermo(p);
 
@@ -1476,14 +1480,13 @@ function formAtendimento(p){
       ? modalCorpo.querySelector('#procOutro').value.trim()
       : procSel.value;
     if(!procedimento){ aviso('Informe o procedimento.'); return; }
-    const bruto = modalCorpo.querySelector('#valor').value.replace(/\./g,'').replace(',','.');
     const at = {
       id:id(), pacienteId:p.id,
       data: modalCorpo.querySelector('#data').value || hoje(),
       procedimento,
       produto: modalCorpo.querySelector('#produto').value.trim(),
       quantidade: modalCorpo.querySelector('#quantidade').value.trim(),
-      valorCentavos: Math.round((parseFloat(bruto) || 0) * 100),
+      valorCentavos: dinheiro(modalCorpo.querySelector('#valor').value),
       obs: modalCorpo.querySelector('#obs').value.trim(),
       fotos: [],
       criadoEm: Date.now()
