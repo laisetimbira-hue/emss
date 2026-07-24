@@ -503,8 +503,23 @@ if(location.hash && location.hash !== '#/') history.replaceState(null, '', locat
 
 /* ---------- início ---------- */
 async function telaInicio(){
-  const [pacs, ret, at] = await Promise.all([DB.todos('pacientes'), DB.todos('retornos'), DB.por('atendimentos','data',hoje())]);
+  const [pacs, ret, at, atsTodos] = await Promise.all([DB.todos('pacientes'), DB.todos('retornos'), DB.por('atendimentos','data',hoje()), DB.todos('atendimentos')]);
   const agendados = ret.filter(r => !r.concluido && r.data >= hoje()).length;
+  const jaAtendidas = new Set(atsTodos.map(a => a.pacienteId));
+  const pacDe = pid => pacs.find(x => x.id === pid);
+  const nomeDe = pid => (pacDe(pid) || {}).nome || 'Paciente removida';
+
+  /* próximos retornos: hoje em diante, os 5 primeiros */
+  const proximos = ret.filter(r => !r.concluido && r.data >= hoje())
+    .sort((a,b) => a.data.localeCompare(b.data) || (a.hora || '99').localeCompare(b.hora || '99'))
+    .slice(0, 5);
+  const lembreteInicio = r => {
+    const p = pacDe(r.pacienteId);
+    const w = p && zap(p.whatsapp || p.telefone);
+    if(!w) return '';
+    const txt = `Oi ${p.nome.split(' ')[0]}! Lembrando seu retorno ${quandoBR(r.data)}${r.hora ? ' às ' + r.hora : ''} 😊`;
+    return `<a class="btn claro" href="${w}?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener" style="padding:7px 14px;font-size:13px;flex:none" onclick="event.stopPropagation()">Lembrar</a>`;
+  };
   const data = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
 
   const md = hoje().slice(5);   // 'MM-DD' de hoje
@@ -528,7 +543,16 @@ async function telaInicio(){
     <div class="grade3">
       ${[['Pacientes',pacs.length],['Retornos agendados',agendados],['Atendimentos hoje',at.length]]
         .map(([r,v]) => `<div class="cartao" style="padding:24px 22px"><div class="etiqueta">${r}</div><div class="num">${v}</div></div>`).join('')}
-    </div>`;
+    </div>
+    <div class="etiqueta" style="margin:28px 0 10px">Próximos retornos</div>
+    ${!proximos.length
+      ? `<p class="sub" style="padding:2px 2px 8px">Nenhum retorno marcado. Os retornos são marcados na ficha da paciente, em Histórico.</p>`
+      : `<div class="lista">${proximos.map(r => `
+        <div class="linha" data-pid="${r.pacienteId}">
+          <div class="ret" style="font-size:11px;flex-direction:column;line-height:1.2">${quandoBR(r.data) === 'hoje' ? 'hoje' : dataBR(r.data).slice(0,5)}${r.hora ? `<span style="font-size:10px;color:var(--cinza)">${r.hora}</span>` : ''}</div>
+          <div style="flex:1"><b>${esc(nomeDe(r.pacienteId))}</b>${jaAtendidas.has(r.pacienteId) ? '' : '<span class="selo">1ª consulta</span>'}<br><small>${r.obs ? esc(r.obs) : 'Retorno'}</small></div>
+          ${lembreteInicio(r)}
+        </div>`).join('')}</div>`}`;
   tela.querySelectorAll('[data-pid]').forEach(l => l.onclick = () => location.hash = '#/paciente/' + l.dataset.pid);
 }
 
