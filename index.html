@@ -148,6 +148,8 @@
   .pt.retorno{background:var(--verde)}
   .pt.feito{box-shadow:inset 0 0 0 1.5px var(--linha2)}
   .pt.atendimento{background:var(--cinza)}
+  .pt.compromisso{background:#b9932e}
+  .dia.ocupado .n{background:var(--nevoa);color:var(--cinza);text-decoration:line-through}
   @media(min-width:768px){.dia{padding:5px 0 9px}.n{width:36px;height:36px;font-size:14px}}
 
   /* diálogos */
@@ -1572,7 +1574,7 @@ let mesRef = (() => { const d = new Date(); d.setDate(1); return d; })();
 let diaSel = hoje();
 
 async function telaAgenda(){
-  const [rets, ats, pacs] = await Promise.all([DB.todos('retornos'), DB.todos('atendimentos'), DB.todos('pacientes')]);
+  const [rets, ats, pacs, comps] = await Promise.all([DB.todos('retornos'), DB.todos('atendimentos'), DB.todos('pacientes'), DB.todos('compromissos')]);
   const nome = pid => (pacs.find(p => p.id === pid) || {}).nome || 'Paciente removida';
   const jaAtendidas = new Set(ats.map(a => a.pacienteId));
   const lembrete = (pid, data, hora, atrasado) => {
@@ -1593,6 +1595,16 @@ async function telaAgenda(){
   rets.forEach(r => juntar(r.data, {tipo: r.concluido ? 'feito' : 'retorno', hora: r.hora || '',
     pid: r.pacienteId, titulo: 'Retorno' + (r.concluido ? ' · concluído' : ''), obs: r.obs, pendente: !r.concluido, dataR: r.data}));
   ats.forEach(a => juntar(a.data, {tipo: 'atendimento', hora: '', pid: a.pacienteId, titulo: a.procedimento, obs: a.obs}));
+  const diasInteiros = new Set();
+  comps.forEach(c => {
+    const fim = c.dataFim || c.data;
+    for(let d = new Date(c.data + 'T12:00:00'); iso(d) <= fim; d.setDate(d.getDate() + 1)){
+      const ds = iso(d);
+      juntar(ds, {tipo:'compromisso', hora: c.diaInteiro ? '' : (c.horaIni || ''), cid: c.id,
+        titulo: c.titulo, obs: c.diaInteiro ? 'Dia inteiro' : [c.horaIni, c.horaFim].filter(Boolean).join(' – ')});
+      if(c.diaInteiro) diasInteiros.add(ds);
+    }
+  });
   Object.values(porDia).forEach(l => l.sort((x, y) => (x.hora || '99').localeCompare(y.hora || '99')));
 
   const atrasados = rets.filter(r => !r.concluido && r.data < hoje()).sort((a, b) => a.data.localeCompare(b.data));
@@ -1611,6 +1623,7 @@ async function telaAgenda(){
       <div class="calTopo">
         <h2 id="mes"></h2>
         <nav>
+          <button class="btn texto" id="novoComp" style="font-size:13px">${ICO.mais}Compromisso</button>
           <button class="btn texto" id="hj" style="font-size:13px">Hoje</button>
           <button class="seta" id="ant" aria-label="Mês anterior">${ICO.esq}</button>
           <button class="seta" id="prox" aria-label="Próximo mês">${ICO.dir}</button>
@@ -1620,7 +1633,7 @@ async function telaAgenda(){
       <div class="dias" id="dias"></div>
     </div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;color:var(--cinza)">
-      ${[['retorno','Retorno marcado'],['feito','Retorno concluído'],['atendimento','Atendimento realizado']]
+      ${[['retorno','Retorno marcado'],['feito','Retorno concluído'],['atendimento','Atendimento realizado'],['compromisso','Compromisso']]
         .map(([c, r]) => `<span style="display:flex;align-items:center;gap:6px"><span class="pt ${c}"></span>${r}</span>`).join('')}
     </div>
     <div id="doDia"></div>`;
@@ -1629,6 +1642,7 @@ async function telaAgenda(){
   tela.querySelector('#ant').onclick = () => { mesRef.setMonth(mesRef.getMonth() - 1); pintar(); };
   tela.querySelector('#prox').onclick = () => { mesRef.setMonth(mesRef.getMonth() + 1); pintar(); };
   tela.querySelector('#hj').onclick = () => { mesRef = new Date(); mesRef.setDate(1); diaSel = hoje(); pintar(); };
+  tela.querySelector('#novoComp').onclick = () => formCompromisso(null, diaSel);
 
   function pintar(){
     const m = MESES[mesRef.getMonth()];
@@ -1648,6 +1662,7 @@ async function telaAgenda(){
       if(d.getMonth() !== mesRef.getMonth()) classes.push('fora');
       if(ds === hoje()) classes.push('hoje');
       if(ds === diaSel) classes.push('sel');
+      if(diasInteiros.has(ds)) classes.push('ocupado');
       html += `<button class="${classes.join(' ')}" data-d="${ds}">
         <div class="n">${d.getDate()}</div>
         <div class="pontos">${itens.slice(0, 4).map(i => `<span class="pt ${i.tipo}"></span>`).join('')}</div>
@@ -1662,19 +1677,75 @@ async function telaAgenda(){
     const alvo = tela.querySelector('#doDia');
     if(!diaSel){ alvo.innerHTML = ''; return; }
     const itens = porDia[diaSel] || [];
-    alvo.innerHTML = `<div class="etiqueta" style="margin:28px 0 10px">${dataBR(diaSel)}</div>` + (
+    const doDiaComp = itens.filter(x => x.tipo === 'compromisso');
+    const resumo = diasInteiros.has(diaSel)
+      ? `Dia ocupado — ${esc((doDiaComp[0] || {}).titulo || 'compromisso')}`
+      : !itens.length ? 'Dia livre' : `${itens.length} marcação${itens.length > 1 ? 'ões' : ''} — o restante do dia está livre`;
+    alvo.innerHTML = `<div class="etiqueta" style="margin:28px 0 10px">${dataBR(diaSel)} · <span style="color:var(--verde)">${resumo}</span></div>` + (
       !itens.length
         ? `<p class="sub" style="padding:4px 2px 8px">Nada marcado neste dia.</p>`
-        : `<div class="lista">${itens.map(i => `
-            <div class="linha" data-p="${i.pid}">
+        : `<div class="lista">${itens.map(i =>
+            i.tipo === 'compromisso'
+            ? `<div class="linha" data-c="${i.cid}">
+              <div class="ret" style="font-size:11px;letter-spacing:.05em;background:#f6efdc;border-color:#e5d9b8">${i.hora || '—'}</div>
+              <div style="flex:1"><b>${esc(i.titulo)}</b><br><small>${esc(i.obs)}</small></div>
+            </div>`
+            : `<div class="linha" data-p="${i.pid}">
               <div class="ret" style="font-size:11px;letter-spacing:.05em">${i.hora || '—'}</div>
               <div style="flex:1"><b>${esc(nome(i.pid))}</b>${jaAtendidas.has(i.pid) ? '' : '<span class="selo">1ª consulta</span>'}<br><small>${esc(i.titulo)}${i.obs ? ' · ' + esc(i.obs) : ''}</small></div>
               ${i.pendente ? lembrete(i.pid, i.dataR, i.hora, i.dataR < hoje()) : ''}
             </div>`).join('')}</div>`);
-    alvo.querySelectorAll('.linha').forEach(l => l.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${l.dataset.p}`; });
+    alvo.querySelectorAll('.linha[data-p]').forEach(l => l.onclick = () => { abaAtual = 'historico'; location.hash = `#/paciente/${l.dataset.p}`; });
+    alvo.querySelectorAll('.linha[data-c]').forEach(l => l.onclick = async () => formCompromisso(await DB.ler('compromissos', l.dataset.c), null));
   }
 
   pintar();
+}
+
+/* compromisso: coisa que ocupa a agenda sem ser paciente — laser fora, congresso, pessoal */
+function formCompromisso(c, dataSugerida){
+  const novo = !c;
+  c = c || {id:id(), titulo:'', data:dataSugerida || hoje(), dataFim:'', diaInteiro:true, horaIni:'', horaFim:'', criadoEm:Date.now()};
+
+  abrirModal(`
+    <div class="topo"><h2>${novo ? 'Novo compromisso' : 'Editar compromisso'}</h2></div>
+    <label class="campo"><span>Título</span><input id="ctitulo" value="${esc(c.titulo)}" placeholder="Ex.: Laser — Caxias do Sul"></label>
+    <div class="dupla">
+      <label class="campo"><span>Data</span><input id="cdata" type="date" value="${esc(c.data)}"></label>
+      <label class="campo"><span>Até <span style="font-weight:400;color:var(--cinza)">(opcional)</span></span><input id="cfim" type="date" value="${esc(c.dataFim)}"></label>
+    </div>
+    <label class="marcar"><input type="checkbox" id="cinteiro" ${c.diaInteiro ? 'checked' : ''}>Dia inteiro</label>
+    <div class="dupla" id="chorasCx" style="${c.diaInteiro ? 'display:none' : ''}">
+      <label class="campo"><span>Das</span><input id="chini" type="time" value="${esc(c.horaIni)}"></label>
+      <label class="campo"><span>Às</span><input id="chfim" type="time" value="${esc(c.horaFim)}"></label>
+    </div>
+    <div class="acoes">
+      ${novo ? '' : '<button class="btn texto perigo" id="cdel" style="margin-right:auto">Excluir</button>'}
+      <button class="btn texto" id="ccanc">Cancelar</button>
+      <button class="btn" id="csalvar">Salvar</button>
+    </div>`);
+
+  modalCorpo.querySelector('#cinteiro').onchange = e =>
+    modalCorpo.querySelector('#chorasCx').style.display = e.target.checked ? 'none' : '';
+  modalCorpo.querySelector('#ccanc').onclick = fecharModal;
+  const del = modalCorpo.querySelector('#cdel');
+  if(del) del.onclick = async () => {
+    if(!await confirmar('Excluir este compromisso?')) return;
+    await DB.apagar('compromissos', c.id);
+    aviso('Compromisso excluído.'); fecharModal(); telaAgenda();
+  };
+  modalCorpo.querySelector('#csalvar').onclick = async () => {
+    const titulo = modalCorpo.querySelector('#ctitulo').value.trim();
+    if(!titulo){ aviso('Dê um título ao compromisso.'); return; }
+    const data = modalCorpo.querySelector('#cdata').value || hoje();
+    let dataFim = modalCorpo.querySelector('#cfim').value;
+    if(dataFim && dataFim < data){ aviso('A data final vem antes da inicial.'); return; }
+    await DB.gravar('compromissos', {...c, titulo, data, dataFim,
+      diaInteiro: modalCorpo.querySelector('#cinteiro').checked,
+      horaIni: modalCorpo.querySelector('#chini').value,
+      horaFim: modalCorpo.querySelector('#chfim').value});
+    aviso('Compromisso salvo.'); fecharModal(); telaAgenda();
+  };
 }
 
 /* ---------- financeiro ---------- */
