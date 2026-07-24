@@ -1752,8 +1752,8 @@ async function telaFinanceiro(){
         ? `<div class="vazio"><h2>Sem receitas neste mês</h2><p>Lance uma receita ou registre um atendimento com valor.</p></div>`
         : `<div class="lista">${l.map(r => `<div class="linha" data-er="${r.id}">
             <div class="ret" style="font-size:11px">${dataBR(r.data).slice(0,5)}</div>
-            <div style="flex:1"><b>${esc(nome(r.pacienteId))}</b><br>
-              <small>${esc(r.procedimento || 'Receita')} · ${FORMAS[r.forma] || ''}${r.status === 'pendente' ? ' · <b style="color:var(--verde)">pendente</b>' : ''}</small></div>
+            <div style="flex:1"><b>${r.pacienteId ? esc(nome(r.pacienteId)) : esc(r.procedimento || 'Receita')}</b><br>
+              <small>${r.pacienteId ? esc(r.procedimento || 'Receita') + ' · ' : ''}${FORMAS[r.forma] || ''}${r.status === 'pendente' ? ' · <b style="color:var(--verde)">pendente</b>' : ''}</small></div>
             <b style="font-variant-numeric:tabular-nums">${moeda(r.valorCentavos)}</b>
           </div>`).join('')}</div>`;
       alvo.querySelectorAll('[data-er]').forEach(x => x.onclick = async () =>
@@ -1783,11 +1783,11 @@ async function formReceita(r, doAtendimento, depois){
     <div class="topo"><h2>${novo ? 'Nova receita' : 'Editar receita'}</h2></div>
     <div class="dupla">
       <label class="campo"><span>Data</span><input id="rdata" type="date" value="${esc(r.data)}"></label>
-      <label class="campo"><span>Paciente</span><select id="rpac">
-        <option value="">—</option>
+      <label class="campo"><span>Paciente <span style="font-weight:400;color:var(--cinza)">(opcional)</span></span><select id="rpac">
+        <option value="">— sem paciente —</option>
         ${pacs.map(p => `<option value="${p.id}" ${p.id === r.pacienteId ? 'selected' : ''}>${esc(p.nome)}</option>`).join('')}
       </select></label>
-      <label class="campo"><span>Procedimento</span><input id="rproc" value="${esc(r.procedimento)}"></label>
+      <label class="campo"><span>Descrição</span><input id="rproc" value="${esc(r.procedimento)}" placeholder="Procedimento, venda de produto…"></label>
       <label class="campo"><span>Valor</span><input id="rvalor" inputmode="decimal" value="${r.valorCentavos ? valorTexto(r.valorCentavos) : ''}" placeholder="0,00"></label>
       <label class="campo"><span>Forma de pagamento</span><select id="rforma">
         ${Object.entries(FORMAS).map(([k,v]) => `<option value="${k}" ${k === r.forma ? 'selected' : ''}>${v}</option>`).join('')}
